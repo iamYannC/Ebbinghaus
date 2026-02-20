@@ -159,7 +159,12 @@ parse_response <- function(raw_response, orientation, response_format = "forced_
       model         = model,
       params        = p
     ),
-    stop("Unknown provider: ", provider, ". Use 'anthropic', 'openai', or 'google'.")
+    github = chat_github(
+      system_prompt = system_prompt,
+      model         = model,
+      params        = p
+    ),
+    stop("Unknown provider: ", provider, ". Use 'anthropic', 'openai', 'google', or 'github'.")
   )
 }
 
