@@ -8,18 +8,21 @@
 #   parse_response()   — extract response_larger from raw model text
 #   fill_prompt()      — resolve prompt templates for a given trial
 #
-# API keys are read from environment variables:
+# Uses the `ellmer` package for all LLM interaction. API keys are read from
+# environment variables by ellmer:
 #   ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY
+#
+# Recommended: store keys in the project .Renviron file:
+#   usethis::edit_r_environ("project")
 #
 # Usage:
 #   source("R/evaluate.R")
 #
 #   model_cfg <- list(
-#     provider      = "openai",
-#     model         = "gpt-4o",
-#     model_version = NA,
-#     temperature   = 0,
-#     max_tokens    = 512
+#     provider    = "openai",
+#     model       = "gpt-4o",
+#     temperature = 0,
+#     max_tokens  = 512
 #   )
 #
 #   results <- evaluate_all(
@@ -30,9 +33,7 @@
 #   )
 # =============================================================================
 
-library(httr2)
-library(jsonlite)
-library(base64enc)
+library(ellmer)
 
 # =============================================================================
 # Direction helpers
@@ -103,9 +104,9 @@ parse_response <- function(raw_response, orientation, response_format = "forced_
     }
   }
 
-  # Normalise: lowercase, strip punctuation, take first word
+  # Normalise: lowercase, strip punctuation (keep hyphens and spaces), take first word
   text_clean <- tolower(trimws(text))
-  text_clean <- gsub("[^a-z -]", " ", text_clean)   # keep hyphens (upper-left)
+  text_clean <- gsub("[^a-z -]", " ", text_clean)
   text_clean <- trimws(text_clean)
   first_word <- strsplit(text_clean, "\\s+")[[1]][1]
 
@@ -128,182 +129,38 @@ parse_response <- function(raw_response, orientation, response_format = "forced_
 }
 
 # =============================================================================
-# Image encoding
+# Chat constructor
 # =============================================================================
 
-#' Read an image file and return its base64-encoded string and MIME type.
+#' Create an ellmer Chat object for a given provider and model config.
 #'
-#' @param image_path Path to the image file.
-#' @return Named list: $b64 (base64 string), $mime (MIME type string).
-encode_image <- function(image_path) {
-  ext  <- tolower(tools::file_ext(image_path))
-  mime <- switch(ext,
-    png  = "image/png",
-    jpg  = , jpeg = "image/jpeg",
-    webp = "image/webp",
-    svg  = "image/svg+xml",
-    stop("Unsupported image format: ", ext)
-  )
-  raw_bytes <- readBin(image_path, what = "raw", n = file.info(image_path)$size)
-  b64 <- base64encode(raw_bytes)
-  list(b64 = b64, mime = mime)
-}
+#' @param provider     Character: "anthropic", "openai", or "google".
+#' @param model        Character: model identifier.
+#' @param system_prompt Character: system prompt.
+#' @param temperature  Numeric: sampling temperature.
+#' @param max_tokens   Integer: max response tokens.
+#' @return An ellmer Chat object (single-use — one chat per trial).
+.make_chat <- function(provider, model, system_prompt, temperature, max_tokens) {
+  p <- params(temperature = temperature, max_tokens = max_tokens)
 
-# =============================================================================
-# Provider-specific API callers
-# =============================================================================
-
-#' Call Anthropic Messages API with an image.
-#'
-#' @param image_path Path to the stimulus image.
-#' @param system_prompt System prompt string.
-#' @param user_prompt  Filled user prompt string.
-#' @param model        Model ID (e.g. "claude-opus-4-5").
-#' @param temperature  Sampling temperature.
-#' @param max_tokens   Max tokens for response.
-#' @return Named list: $text (raw response text), $error (NA or message).
-.call_anthropic <- function(image_path, system_prompt, user_prompt,
-                             model, temperature, max_tokens) {
-  api_key <- Sys.getenv("ANTHROPIC_API_KEY")
-  if (nchar(api_key) == 0) stop("ANTHROPIC_API_KEY not set")
-
-  img <- encode_image(image_path)
-
-  body <- list(
-    model      = model,
-    max_tokens = max_tokens,
-    temperature = temperature,
-    system     = system_prompt,
-    messages   = list(
-      list(
-        role    = "user",
-        content = list(
-          list(
-            type  = "image",
-            source = list(
-              type       = "base64",
-              media_type = img$mime,
-              data       = img$b64
-            )
-          ),
-          list(type = "text", text = user_prompt)
-        )
-      )
-    )
-  )
-
-  resp <- request("https://api.anthropic.com/v1/messages") |>
-    req_headers(
-      "x-api-key"         = api_key,
-      "anthropic-version" = "2023-06-01",
-      "content-type"      = "application/json"
-    ) |>
-    req_body_json(body) |>
-    req_retry(
-      max_tries        = 4,
-      retry_on_failure = TRUE,
-      is_transient     = \(r) resp_status(r) %in% c(429, 500, 503, 529)
-    ) |>
-    req_perform()
-
-  parsed <- resp_body_json(resp)
-  text   <- parsed$content[[1]]$text
-  list(text = text, error = NA_character_)
-}
-
-#' Call OpenAI Chat Completions API with an image.
-.call_openai <- function(image_path, system_prompt, user_prompt,
-                          model, temperature, max_tokens) {
-  api_key <- Sys.getenv("OPENAI_API_KEY")
-  if (nchar(api_key) == 0) stop("OPENAI_API_KEY not set")
-
-  img <- encode_image(image_path)
-  data_url <- paste0("data:", img$mime, ";base64,", img$b64)
-
-  body <- list(
-    model       = model,
-    temperature = temperature,
-    max_tokens  = max_tokens,
-    messages    = list(
-      list(role = "system", content = system_prompt),
-      list(
-        role    = "user",
-        content = list(
-          list(type = "image_url", image_url = list(url = data_url)),
-          list(type = "text",      text = user_prompt)
-        )
-      )
-    )
-  )
-
-  resp <- request("https://api.openai.com/v1/chat/completions") |>
-    req_headers(
-      "Authorization" = paste("Bearer", api_key),
-      "Content-Type"  = "application/json"
-    ) |>
-    req_body_json(body) |>
-    req_retry(
-      max_tries        = 4,
-      retry_on_failure = TRUE,
-      is_transient     = \(r) resp_status(r) %in% c(429, 500, 503)
-    ) |>
-    req_perform()
-
-  parsed <- resp_body_json(resp)
-  text   <- parsed$choices[[1]]$message$content
-  list(text = text, error = NA_character_)
-}
-
-#' Call Google Gemini API with an image.
-.call_google <- function(image_path, system_prompt, user_prompt,
-                          model, temperature, max_tokens) {
-  api_key <- Sys.getenv("GOOGLE_API_KEY")
-  if (nchar(api_key) == 0) stop("GOOGLE_API_KEY not set")
-
-  img <- encode_image(image_path)
-
-  body <- list(
-    system_instruction = list(
-      parts = list(list(text = system_prompt))
+  switch(provider,
+    anthropic = chat_anthropic(
+      system_prompt = system_prompt,
+      model         = model,
+      params        = p
     ),
-    contents = list(
-      list(
-        role  = "user",
-        parts = list(
-          list(
-            inline_data = list(
-              mime_type = img$mime,
-              data      = img$b64
-            )
-          ),
-          list(text = user_prompt)
-        )
-      )
+    openai = chat_openai(
+      system_prompt = system_prompt,
+      model         = model,
+      params        = p
     ),
-    generationConfig = list(
-      temperature    = temperature,
-      maxOutputTokens = max_tokens
-    )
+    google = chat_google_gemini(
+      system_prompt = system_prompt,
+      model         = model,
+      params        = p
+    ),
+    stop("Unknown provider: ", provider, ". Use 'anthropic', 'openai', or 'google'.")
   )
-
-  url <- paste0(
-    "https://generativelanguage.googleapis.com/v1beta/models/",
-    model, ":generateContent?key=", api_key
-  )
-
-  resp <- request(url) |>
-    req_headers("Content-Type" = "application/json") |>
-    req_body_json(body) |>
-    req_retry(
-      max_tries        = 4,
-      retry_on_failure = TRUE,
-      is_transient     = \(r) resp_status(r) %in% c(429, 500, 503)
-    ) |>
-    req_perform()
-
-  parsed <- resp_body_json(resp)
-  text   <- parsed$candidates[[1]]$content$parts[[1]]$text
-  list(text = text, error = NA_character_)
 }
 
 # =============================================================================
@@ -312,8 +169,9 @@ encode_image <- function(image_path) {
 
 #' Evaluate a single trial with one prompt and one model configuration.
 #'
-#' Sends the stimulus image to the VLM API, parses the response, and returns
-#' a one-row data frame conforming to the evals.csv schema.
+#' Creates a fresh Chat object, sends the stimulus image with the filled
+#' prompt, parses the response, and returns a one-row data frame conforming
+#' to the evals.csv schema.
 #'
 #' @param trial      One-row data frame from trials.csv.
 #' @param prompt     One-row data frame from prompts.csv.
@@ -323,8 +181,7 @@ encode_image <- function(image_path) {
 #' @param temperature Numeric: sampling temperature.
 #' @param max_tokens  Integer: max response tokens.
 #' @param image_dir   Character: directory containing eval images (answer-stripped).
-#'   Defaults to "images_eval/". Falls back to trial$file_path if the eval
-#'   copy doesn't exist (useful for local testing).
+#'   Falls back to trial$file_path if the eval copy doesn't exist.
 #' @param eval_id     Integer: identifier for this row. NA = caller assigns.
 #'
 #' @return A one-row data frame with the evals.csv schema.
@@ -341,27 +198,31 @@ evaluate_trial <- function(trial, prompt,
   stripped_path <- file.path(image_dir, stripped_name)
   image_path <- if (file.exists(stripped_path)) stripped_path else trial$file_path
 
+  if (!file.exists(image_path)) {
+    return(data.frame(
+      eval_id = as.integer(eval_id), trial_id = trial$trial_id,
+      prompt_id = prompt$prompt_id, provider = provider, model = model,
+      model_version = as.character(model_version), temperature = temperature,
+      max_tokens = as.integer(max_tokens), response_larger = "parse_error",
+      response_confidence = NA_real_, raw_response = NA_character_,
+      latency_ms = NA_integer_,
+      timestamp = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+      error = paste0("Image not found: ", image_path),
+      stringsAsFactors = FALSE
+    ))
+  }
+
   # Fill prompt template
   user_prompt <- fill_prompt(prompt$user_prompt_template, trial)
 
-  # Call the appropriate provider
+  # Create a fresh chat object (one per trial — no conversation history)
   t_start <- proc.time()[["elapsed"]]
 
   result <- tryCatch({
-    caller <- switch(provider,
-      anthropic = .call_anthropic,
-      openai    = .call_openai,
-      google    = .call_google,
-      stop("Unknown provider: ", provider)
-    )
-    caller(
-      image_path    = image_path,
-      system_prompt = prompt$system_prompt,
-      user_prompt   = user_prompt,
-      model         = model,
-      temperature   = temperature,
-      max_tokens    = max_tokens
-    )
+    ch <- .make_chat(provider, model, prompt$system_prompt, temperature, max_tokens)
+    # Send image + text; content_image_file handles encoding per provider
+    response_text <- ch$chat(user_prompt, content_image_file(image_path, resize = "none"))
+    list(text = response_text, error = NA_character_)
   }, error = function(e) {
     list(text = NA_character_, error = conditionMessage(e))
   })
@@ -501,10 +362,3 @@ evaluate_all <- function(trials,
   if (verbose) message("Done. Results written to: ", out_path)
   invisible(read.csv(out_path, stringsAsFactors = FALSE))
 }
-
-# =============================================================================
-# Utility
-# =============================================================================
-
-# Null-coalescing operator (available in R >= 4.4, define for compatibility)
-`%||%` <- function(x, y) if (!is.null(x)) x else y
