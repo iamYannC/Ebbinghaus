@@ -1,0 +1,21 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Images (large binary files — share via trials.csv + render_stimuli())
+images/
+images_eval/
+
+# Output plots and tables (generated artifacts)
+output/
+
+# Environment / secrets
+.env
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
