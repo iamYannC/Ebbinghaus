@@ -31,7 +31,7 @@ strip_answer_from_path <- function(path) {
 #'
 #' @return The input trials data frame with `file_path` updated to the
 #'   stripped copies. Original `file_path` preserved in `file_path_original`.
-strip_answer_from_images <- function(trials, output_dir = "Ebbinghaus/images_eval",
+strip_answer_from_images <- function(trials, output_dir = "images_eval",
                                      verbose = TRUE) {
 
   if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
@@ -46,12 +46,15 @@ strip_answer_from_images <- function(trials, output_dir = "Ebbinghaus/images_eva
     src <- trials$file_path_original[i]
     dst <- trials$file_path[i]
 
-    if (!file.exists(src)) {
-      warning("Source file not found: ", src)
+    # Normalize source path (remove leading "Ebbinghaus/" if present)
+    src_normalized <- sub("^Ebbinghaus/", "", src)
+    
+    if (!file.exists(src_normalized)) {
+      warning("Source file not found: ", src_normalized, " (original: ", src, ")")
       next
     }
 
-    file.copy(src, dst, overwrite = TRUE)
+    file.copy(src_normalized, dst, overwrite = TRUE)
   }
 
   if (verbose) {

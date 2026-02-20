@@ -196,7 +196,17 @@ evaluate_trial <- function(trial, prompt,
   # Resolve image path: prefer answer-stripped copy
   stripped_name <- paste0(trial$trial_id, ".", trial$file_format)
   stripped_path <- file.path(image_dir, stripped_name)
-  image_path <- if (file.exists(stripped_path)) stripped_path else trial$file_path
+  
+  # Normalize trial file_path (remove leading "Ebbinghaus/" if present)
+  trial_path <- sub("^Ebbinghaus/", "", trial$file_path)
+  
+  image_path <- if (file.exists(stripped_path)) {
+    stripped_path
+  } else if (file.exists(trial_path)) {
+    trial_path
+  } else {
+    trial$file_path  # fallback to original path
+  }
 
   if (!file.exists(image_path)) {
     return(data.frame(
