@@ -79,13 +79,15 @@ source("R/generate_design.R")
 source("R/render_stimuli.R")
 
 trials <- generate_design(seed = 7042)
+# -> writes trial table to data/trials.csv
 render_stimuli(trials)
+# -> writes stimulus images to images/
 ```
 
 ### Pattern 2: Filter an existing trial table
 
 ```r
-trials <- read.csv("data/trials.csv")
+trials <- read.csv("data/trials.csv")  # data/trials.csv
 
 # Only diagonal, circle-only, Tier 2 trials
 my_subset <- trials |>
@@ -339,9 +341,10 @@ All downstream functions (`verify_trial()`, `classify_tier()`, `render_stimuli()
 **Parameters:**
 - `seed`: RNG seed for the entire design generation. Stored in each trial row's `seed` column for traceability.
 - `n_per_tier`: Minimum number of trials per tier.
+- `out_path`: Path to write the trials CSV. Default: `"data/trials.csv"`. Set to `NULL` to skip writing.
 - Other configuration parameters for ranges, pools, etc.
 
-**Output:** A complete `trials` data frame, verified and tier-classified.
+**Output:** Writes the trial table to `out_path` (default `data/trials.csv`) and returns it invisibly.
 
 ---
 
