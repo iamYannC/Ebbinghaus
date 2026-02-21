@@ -4,6 +4,16 @@ This document provides a complete reference of all variables used in the project
 
 ---
 
+## Phase Overview
+
+| Phase | Input | Output |
+|-------|-------|--------|
+| **1. Stimulus Creation** | `source("R/generate_design.R")`, `source("R/render_stimuli.R")` | `trials` data frame + rendered images in `images/` |
+| **2. Evaluation** | `trials` data frame (or `data/trials.csv`), `data/prompts.csv`, model API keys | `data/evals.csv` |
+| **3. Analysis** | `data/trials.csv`, `data/evals.csv`, `data/prompts.csv` | Summary tables and plots in `output/` |
+
+---
+
 ## Table of Contents
 
 1. [trials.csv — Phase 1: Stimulus Creation](#trialcsv--phase-1-stimulus-creation)
@@ -24,60 +34,94 @@ This document provides a complete reference of all variables used in the project
 | # | Variable | Type | Values/Range | Role | How to Modify |
 |---|----------|------|--------------|------|---------------|
 | 1 | `trial_id` | integer | Auto-increment (1, 2, 3, ...) | Primary key | Auto-assigned by `generate_design()`. Don't edit manually unless constructing custom trials. |
-| 2 | `n_comparisons` | integer | `2` (fixed) | Design | Fixed at 2 for current design. Reserved for future multi-way comparisons. |
+| 2 | `n_comparisons` | integer | `2` (fixed) | Design | Number of test stimuli presented per trial. Fixed at 2 (the classic pairwise comparison). Reserved for future multi-way comparisons. |
 | 3 | `orientation` | character | `"horizontal"`, `"vertical"`, `"diagonal"` | Layout | Controls spatial arrangement. Horizontal = left/right, vertical = top/bottom, diagonal = upper-left/lower-right. Edit in `generate_trial()` or filter existing trials. |
 | 4 | `canvas_width` | integer | `{512, 768, 1024}` | Layout | Image width in pixels. Modify `CANVAS_SIZES` in `config/defaults.R`. |
 | 5 | `canvas_height` | integer | `{512, 768, 1024}` | Layout | Image height in pixels. Modify `CANVAS_SIZES` in `config/defaults.R`. |
 | 6 | `background_color` | character | `"#FFFFFF"`, `"#000000"` | Layout | Canvas background (black or white). Modify `BACKGROUND_POOL` in `config/defaults.R`. |
 | 7 | `test_a_shape` | character | `"circle"`, `"square"` | Test stimulus | Shape of test stimulus A (position = left/top/upper-left). Modify `SHAPE_POOL` in `config/defaults.R`. |
-| 8 | `test_a_size` | numeric | `(0, ∞)`, typical `[0.5, 2.0]` | Test stimulus | Size in plot units (radius for circle, half-side for square). Modify `TEST_SIZE_RANGE` in `config/defaults.R`. |
+| 8 | `test_a_size` | numeric | `(0, ∞)` | Test stimulus | Size in plot units (radius for circle, half-side for square). Computed as `proportion × min(canvas_width, canvas_height)`, where the proportion is drawn from `TEST_SIZE_RANGE` (default `[0.03, 0.08]`). With current defaults and canvas sizes, typical values fall roughly in `[15, 82]`. Modify `TEST_SIZE_RANGE` in `config/defaults.R`. |
 | 9 | `test_a_color` | character | Hex color (e.g., `"#4682B4"`) | Test stimulus | Border color. Modify `COLOR_POOL` in `config/defaults.R`. |
 | 10 | `test_a_fill` | character | Hex color or `NA` | Test stimulus | Fill color (`NA` = outline only). Modify `FILL_POOL` in `config/defaults.R`. |
 | 11 | `test_b_shape` | character | `"circle"`, `"square"` | Test stimulus | Shape of test stimulus B (position = right/bottom/lower-right). |
-| 12 | `test_b_size` | numeric | `(0, ∞)`, typical `[0.5, 2.0]` | Test stimulus | Size in plot units. **This is the key comparison variable**—manipulated to create different tiers. |
+| 12 | `test_b_size` | numeric | `(0, ∞)` | Test stimulus | Size in plot units. Same scale as `test_a_size` (see above). **This is the key comparison variable**—manipulated to create different tiers. |
 | 13 | `test_b_color` | character | Hex color | Test stimulus | Border color. |
 | 14 | `test_b_fill` | character | Hex color or `NA` | Test stimulus | Fill color. |
 | 15 | `surround_a_shape` | character | `"circle"`, `"square"`, `NA` | Context stimulus | Shape of surround stimuli around A. `NA` when `surround_a_n == 0`. |
-| 16 | `surround_a_size` | numeric | `(0, ∞)`, typical `[0.3, 4.0]`, or `NA` | Context stimulus | Size of each surround. **Key illusion variable**—larger surrounds make test appear smaller. Modify `SURROUND_SIZE_RANGE` in `config/defaults.R`. |
+| 16 | `surround_a_size` | numeric | `(0, ∞)` or `NA` | Context stimulus | Size of each surround in plot units. Computed as `proportion × min(canvas_width, canvas_height)`, where the proportion is drawn from `SURROUND_SIZE_RANGE` (default `[0.02, 0.15]`). **Key illusion variable**—larger surrounds make test appear smaller. `NA` when `surround_a_n == 0`. Modify `SURROUND_SIZE_RANGE` in `config/defaults.R`. |
 | 17 | `surround_a_n` | integer | `{0, 4, 5, 6, 7, 8}` | Context stimulus | Number of surrounds. `0` = Tier 0 (sanity check). Modify `SURROUND_N_RANGE` in `config/defaults.R`. |
 | 18 | `surround_a_color` | character | Hex color or `NA` | Context stimulus | Border color of surrounds. |
 | 19 | `surround_a_fill` | character | Hex color or `NA` | Context stimulus | Fill color of surrounds. |
 | 20 | `surround_a_distance` | numeric | `(0, ∞)` or `NA` | Context stimulus | Distance from test center to surround centers. Controls crowding. Modify `SURROUND_DISTANCE_RANGE` in `config/defaults.R`. |
 | 21 | `surround_b_shape` | character | `"circle"`, `"square"`, `NA` | Context stimulus | Shape of surround stimuli around B. |
-| 22 | `surround_b_size` | numeric | `(0, ∞)`, typical `[0.3, 4.0]`, or `NA` | Context stimulus | Size of each surround around B. **Manipulated relative to `surround_a_size` to create tiers**. |
+| 22 | `surround_b_size` | numeric | `(0, ∞)` or `NA` | Context stimulus | Size of each surround around B. Same scale as `surround_a_size` (see above). **Manipulated relative to `surround_a_size` to create tiers**. |
 | 23 | `surround_b_n` | integer | `{0, 4, 5, 6, 7, 8}` | Context stimulus | Number of surrounds around B. |
 | 24 | `surround_b_color` | character | Hex color or `NA` | Context stimulus | Border color. |
 | 25 | `surround_b_fill` | character | Hex color or `NA` | Context stimulus | Fill color. |
 | 26 | `surround_b_distance` | numeric | `(0, ∞)` or `NA` | Context stimulus | Distance from test B center to surround centers. |
 | 27 | `true_larger` | character | `"equal"`, `"a"`, `"b"` | Ground truth | **Computed by `verify_trial()`**—never set manually. Determined purely from `test_a_size` vs `test_b_size`. |
-| 28 | `true_diff_pct` | numeric | `[0, 100)` | Ground truth | **Computed by `verify_trial()`**. Formula: `abs(a - b) / max(a, b) * 100`. |
+| 28 | `true_diff_ratio` | numeric | `[0, 1)` | Ground truth | **Computed by `verify_trial()`**. Formula: `abs(a - b) / max(a, b)`. A decimal proportion (e.g., 0.15 means 15% difference). |
 | 29 | `tier` | integer | `{0, 1, 2, 3}` or `NA` | Ground truth | **Computed by `classify_tier()`**. Tier 0 = no surrounds, Tier 1 = equal sizes, Tier 2 = incongruent, Tier 3 = congruent. See SPECIFICATION.md §1.4. |
-| 30 | `seed` | integer | Any integer or `NA` | Reproducibility | RNG seed used by `generate_trial()`. `NA` if manually constructed. Allows exact reproduction. |
+| 30 | `seed` | integer | Any integer or `NA` | Reproducibility | RNG seed used by `generate_trial()`. `NA` if the trial was manually constructed. Allows exact reproduction. Note: the `tier` parameter in `generate_trial()` accepts `NULL` (unconstrained) or `0`/`1`/`2`/`3` (targeted); `NA` is not a valid target tier—it is only an output of `classify_tier()`. |
 | 31 | `file_format` | character | `"png"`, `"svg"`, `"webp"` | Rendering | Image format. Modify `FILE_FORMAT_POOL` in `config/defaults.R`. |
 | 32 | `file_path` | character | Relative path, e.g., `"images/1_b_t3.png"` | Rendering | Path to rendered image. Auto-generated by `generate_design()` or `render_stimuli()`. Format: `<id>_<true_larger>_t<tier>.<ext>`. |
 
-### How to modify trials.csv:
+### Create trials
 
-**Option 1: Filter existing trials**
-```r
-trials <- read.csv("data/trials.csv")
-my_subset <- trials |> filter(tier == 1, orientation == "horizontal")
-render_stimuli(my_subset)
-```
-
-**Option 2: Generate new design**
 ```r
 source("R/generate_design.R")
+source("R/render_stimuli.R")
+
 trials <- generate_design(seed = 999, n_per_tier = 50)  # 50 trials per tier
-render_stimuli(trials)
+# optional: write.csv(trials, "data/trials.csv", row.names = FALSE)
+render_stimuli(trials)  # renders to images/
 ```
 
-**Option 3: Modify config and regenerate**
-```r
-# In config/defaults.R, change:
-SHAPE_POOL <- c("circle", "square", "triangle")  # Add triangles
-# Then regenerate
-```
+This produces a `trials` data frame in memory and renders stimulus images to `images/`.
+You can optionally persist the data frame to `data/trials.csv` for later use in Phase 2.
+If you do, load it in subsequent phases with `trials <- read.csv("data/trials.csv")`.
+
+> **Tip:** To change the default parameter pools or ranges (e.g., add a new
+> shape, widen the size range), edit `config/defaults.R` before generating.
+
+> **Demo trials:** This repo ships a small sample dataset at `data/trials.csv`
+> (with rendered images in `images/`) so you can explore Phase 2 and 3 without
+> generating your own. These are for convenience only—run `generate_design()`
+> to produce a proper experimental design.
+
+### Combinatoric space (discrete parameters only)
+
+Using the current defaults in `config/defaults.R`, the number of distinct discrete combinations is:
+
+| Parameter | Levels | Values |
+|-----------|--------|--------|
+| `orientation` | 3 | horizontal, vertical, diagonal |
+| `canvas_width` | 3 | 512, 768, 1024 |
+| `canvas_height` | 3 | 512, 768, 1024 |
+| `background_color` | 2 | white, black |
+| `test_a_shape` | 2 | circle, square |
+| `test_a_color` | 5 | 5 hex codes |
+| `test_a_fill` | 6 | 5 hex codes + `NA` |
+| `test_b_shape` | 2 | circle, square |
+| `test_b_color` | 5 | 5 hex codes |
+| `test_b_fill` | 6 | 5 hex codes + `NA` |
+| `surround_a_shape` | 2 | circle, square |
+| `surround_a_n` | 6 | 0, 4, 5, 6, 7, 8 |
+| `surround_a_color` | 5 | 5 hex codes |
+| `surround_a_fill` | 6 | 5 hex codes + `NA` |
+| `surround_b_shape` | 2 | circle, square |
+| `surround_b_n` | 6 | 0, 4, 5, 6, 7, 8 |
+| `surround_b_color` | 5 | 5 hex codes |
+| `surround_b_fill` | 6 | 5 hex codes + `NA` |
+| `file_format` | 3 | png, svg, webp |
+
+Assuming current defaults, the total number of options is roughly **~75.6 billion**.
+
+> **Note:** Six parameters are continuous rather than discrete: `test_a_size`,
+> `test_b_size`, `surround_a_size`, `surround_b_size`, `surround_a_distance`,
+> and `surround_b_distance`. These are drawn from ranges defined in
+> `config/defaults.R` and make the true parameter space effectively infinite.
+> The count above reflects only the discrete axes.
 
 ---
 
@@ -286,7 +330,7 @@ evaluate_all(trials, prompts, models)
 ## Variable Naming Conventions
 
 - **Columns with `_a` / `_b` suffix:** Refer to stimulus positions A (left/top/upper-left) and B (right/bottom/lower-right).
-- **Columns ending in `_pct`:** Percentages (0–100 scale).
+- **Columns ending in `_ratio`:** Decimal proportions (0–1 scale).
 - **Columns ending in `_n`:** Counts (integers).
 - **Columns ending in `_id`:** Primary or foreign keys (integers).
 - **All color values:** 6-digit hex codes (e.g., `"#4682B4"`) or `NA`.

@@ -79,12 +79,14 @@ source("R/generate_design.R")
 source("R/render_stimuli.R")
 
 trials <- generate_design(seed = 7042)
-render_stimuli(trials)
+# optional: write.csv(trials, "data/trials.csv", row.names = FALSE)
+render_stimuli(trials)  # renders to images/
 ```
 
-### Pattern 2: Filter an existing trial table
+### Pattern 2: Filter a saved or demo trial table
 
 ```r
+# If you saved trials in a previous step, or are using the bundled demo dataset:
 trials <- read.csv("data/trials.csv")
 
 # Only diagonal, circle-only, Tier 2 trials
@@ -143,7 +145,7 @@ Phase 1 generates the stimulus images that form the benchmark's image bank. It t
 
 Key properties:
 - **Parameters first:** The trial table fully determines every image. Researchers control the experiment by constructing, filtering, or generating trial tables. The renderer is a pure consumer.
-- **Ground truth is computed, never manual:** `verify_trial()` derives `true_larger` and `true_diff_pct` from size parameters. `classify_tier()` assigns difficulty tiers. Both are deterministic pure functions.
+- **Ground truth is computed, never manual:** `verify_trial()` derives `true_larger` and `true_diff_ratio` from size parameters. `classify_tier()` assigns difficulty tiers. Both are deterministic pure functions.
 - **Geometric validity is enforced:** The generator ensures surrounds don't occlude test shapes, adjacent surrounds don't overlap, groups don't intrude on each other, and all shapes contrast against the background. See `config/defaults.R` for tunable parameters.
 - **Reproducible:** Every randomly generated trial stores its RNG seed. Given the same seed, `generate_trial()` produces identical parameters.
 - **Image naming:** Files are named `<trial_id>_<true_larger>_t<tier>.<ext>` (e.g., `7_equal_t1.png`). Use `strip_answer_from_images()` to create clean copies (`7.png`) before sending to AI models.
@@ -232,7 +234,7 @@ Position B is right / bottom / bottom-right depending on orientation.
 | Column             | Type      | Values / Range                     | Description                                      |
 |--------------------|-----------|------------------------------------|--------------------------------------------------|
 | `true_larger`      | character | `"equal"`, `"a"`, `"b"`           | Which test stimulus is truly larger              |
-| `true_diff_pct`    | numeric   | `[0, 100)`                        | `abs(a - b) / max(a, b) * 100`. 0 when equal.   |
+| `true_diff_ratio`  | numeric   | `[0, 1)`                          | `abs(a - b) / max(a, b)`. 0 when equal.         |
 | `tier`             | integer   | `0`, `1`, `2`, `3`                | Difficulty tier (see §1.4)                       |
 
 #### Reproducibility
@@ -258,7 +260,7 @@ A **pure, deterministic function** that takes trial parameters and returns groun
 
 **Output:** Adds/overwrites the following columns:
 - `true_larger`: `"equal"` if sizes are identical, `"a"` if A is larger, `"b"` if B is larger.
-- `true_diff_pct`: `abs(test_a_size - test_b_size) / max(test_a_size, test_b_size) * 100`
+- `true_diff_ratio`: `abs(test_a_size - test_b_size) / max(test_a_size, test_b_size)`
 
 **Rules:**
 - Comparison is strictly on the `size` parameter. Since `size` is defined consistently across shapes (radius for circle, half-side for square), this is an apples-to-apples comparison of visual extent.
@@ -331,7 +333,7 @@ Builds a complete trial table for an experiment. **This is one provided strategy
 All downstream functions (`verify_trial()`, `classify_tier()`, `render_stimuli()`) accept any data frame with the correct columns, regardless of how it was created.
 
 **Default strategy (our experiment):**
-- **Core factorial block**: Cross key variables (true_larger × true_diff_pct levels × surround_size_ratio × orientation). This is the analysis-critical subset.
+- **Core factorial block**: Cross key variables (true_larger × true_diff_ratio levels × surround_size_ratio × orientation). This is the analysis-critical subset.
 - **Tier-stratified block**: Ensure minimum representation per tier (e.g., at least N trials per tier).
 - **Robustness block**: Vary nuisance parameters (color, canvas size, file format, shape combinations) using Latin-square or random sampling to avoid full factorial explosion.
 - **Counterbalancing**: For every trial where A has large surrounds, there should be a matched trial where B has large surrounds (controls for spatial bias).
@@ -341,7 +343,7 @@ All downstream functions (`verify_trial()`, `classify_tier()`, `render_stimuli()
 - `n_per_tier`: Minimum number of trials per tier.
 - Other configuration parameters for ranges, pools, etc.
 
-**Output:** A complete `trials` data frame, verified and tier-classified.
+**Output:** A complete `trials` data frame, verified and tier-classified. Not written to disk automatically—persist with `write.csv()` if needed.
 
 ---
 
@@ -456,7 +458,7 @@ trials_enriched <- trials |>
 | Analysis                    | Description                                                                                         |
 |-----------------------------|-----------------------------------------------------------------------------------------------------|
 | **Overall accuracy**        | Proportion correct by model, by tier                                                                |
-| **Psychometric curves**     | Accuracy as a function of `true_diff_pct`, per model. The signature plot of this benchmark.         |
+| **Psychometric curves**     | Accuracy as a function of `true_diff_ratio`, per model. The signature plot of this benchmark.       |
 | **Illusion susceptibility** | On Tier 1 (equal) trials: proportion answering non-equal. Higher = more susceptible.                |
 | **Illusion direction**      | On Tier 1 trials: does the model consistently pick the side with small surrounds as "larger"? (Classic Ebbinghaus response) |
 | **Spatial bias**            | Across all trials: does the model favor A or B regardless of truth?                                 |
@@ -469,7 +471,7 @@ trials_enriched <- trials |>
 
 ### 3.3 Key Visualizations
 
-1. **Psychometric curve**: x = `true_diff_pct`, y = P(correct), color = model. Include error bars.
+1. **Psychometric curve**: x = `true_diff_ratio`, y = P(correct), color = model. Include error bars.
 2. **Confusion matrix heatmap**: true_larger vs response_larger, per model.
 3. **Illusion susceptibility bar chart**: proportion "fooled" on Tier 1, by model.
 4. **Congruency effect plot**: accuracy on Tier 2 vs Tier 3, by model (paired).
@@ -526,7 +528,7 @@ This is the single authoritative registry of every variable in the project. Each
 | 25| `surround_b_fill`     | character | Color pool or `NA`                                 | Fill color of surrounds around B.                                                                | Context stimulus |
 | 26| `surround_b_distance` | numeric   | `(0, ∞)` or `NA`                                  | Distance from center of test B to center of each surrounding shape. `NA` when `surround_b_n == 0`. | Context stimulus |
 | 27| `true_larger`         | character | `{"equal", "a", "b"}`                             | Ground truth: which test stimulus is truly larger. Computed by `verify_trial()`, never set manually. | Ground truth     |
-| 28| `true_diff_pct`       | numeric   | `[0, 100)`                                        | Percentage size difference: `abs(a - b) / max(a, b) * 100`. 0 when equal. Computed by `verify_trial()`. | Ground truth     |
+| 28| `true_diff_ratio`     | numeric   | `[0, 1)`                                          | Size difference ratio: `abs(a - b) / max(a, b)`. 0 when equal. Computed by `verify_trial()`. | Ground truth     |
 | 29| `tier`                | integer   | `{0, 1, 2, 3}` or `NA`                            | Difficulty tier assigned by `classify_tier()`. See Tier Definitions. `NA` for neutral/unclassifiable trials. | Ground truth     |
 | 30| `seed`                | integer   | Any integer or `NA`                                | RNG seed used to generate this trial's random parameters. `NA` if trial was manually constructed. Enables exact reproduction of random generation. | Reproducibility  |
 | 31| `file_format`         | character | `{"png", "svg", "webp"}`                          | Image file format for this trial's rendered stimulus.                                            | Rendering        |

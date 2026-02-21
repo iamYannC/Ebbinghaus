@@ -12,6 +12,8 @@
 # =============================================================================
 
 # --- Shape pools ---
+# This defines which shapes are available for random selection. The geometric
+# definition of each shape (how it is drawn) lives in R/draw_shape.R.
 SHAPE_POOL <- c("circle", "square")
 
 # --- Size ranges (as proportion of canvas min-dimension) ---
@@ -46,7 +48,6 @@ FILE_FORMAT_POOL <- c("png", "svg", "webp")
 FLOAT_TOLERANCE <- 1e-9
 
 # --- Design defaults ---
-DEFAULT_SEED         <- NULL   # NULL = generate a random seed
 DEFAULT_N_PER_TIER   <- 50L   # Minimum trials per tier in generate_design()
 DEFAULT_FILE_FORMAT  <- "png"
 DEFAULT_CANVAS_WIDTH  <- 768L

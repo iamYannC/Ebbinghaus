@@ -162,10 +162,10 @@ analyze_results <- function(trials_path  = "data/trials.csv",
          x = "Tier", y = "Accuracy", fill = "Model") +
     theme_minimal()
   
-  # 3. Psychometric curve (accuracy vs true_diff_pct)
+  # 3. Psychometric curve (accuracy vs true_diff_ratio)
   psych_data <- data |>
-    filter(!is.na(correct), true_diff_pct > 0) |>  # Exclude equal trials
-    mutate(diff_bin = cut(true_diff_pct, breaks = c(0, 10, 20, 30, 100), 
+    filter(!is.na(correct), true_diff_ratio > 0) |>  # Exclude equal trials
+    mutate(diff_bin = cut(true_diff_ratio, breaks = c(0, 0.10, 0.20, 0.30, 1.0), 
                           labels = c("0-10%", "10-20%", "20-30%", ">30%"))) |>
     group_by(model_label, diff_bin) |>
     summarise(

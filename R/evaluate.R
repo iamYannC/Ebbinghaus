@@ -202,15 +202,12 @@ evaluate_trial <- function(trial, prompt,
   stripped_name <- paste0(trial$trial_id, ".", trial$file_format)
   stripped_path <- file.path(image_dir, stripped_name)
   
-  # Normalize trial file_path (remove leading "Ebbinghaus/" if present)
-  trial_path <- sub("^Ebbinghaus/", "", trial$file_path)
-  
   image_path <- if (file.exists(stripped_path)) {
     stripped_path
-  } else if (file.exists(trial_path)) {
-    trial_path
+  } else if (file.exists(trial$file_path)) {
+    trial$file_path
   } else {
-    trial$file_path  # fallback to original path
+    trial$file_path  # fallback (will fail at the check below)
   }
 
   if (!file.exists(image_path)) {

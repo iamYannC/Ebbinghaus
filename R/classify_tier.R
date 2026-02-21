@@ -20,12 +20,19 @@ source("config/defaults.R")
 #'   `surround_a_n`, `surround_b_n`, `surround_a_size`, `surround_b_size`.
 #' @param tol Floating-point tolerance for surround size equality. Default from config.
 #'
-#' @details Calls `verify_trial()` first to ensure `true_larger` is present. [human notes: improve and add @seealso.]
-#' 
+#' @details
+#' Requires `true_larger` to be present in the input. Call [verify_trial()] first
+#' to compute ground-truth columns. The tier assignment depends only on
+#' `true_larger`, `surround_a_n`, `surround_b_n`, `surround_a_size`, and
+#' `surround_b_size`.
+#'
+#' @seealso [verify_trial()] for computing `true_larger` and `true_diff_ratio`,
+#'   [generate_trial()] which calls both `verify_trial()` and `classify_tier()`
+#'   internally, [generate_design()] for building a full design matrix.
+#'
 #' @return The input data frame with `tier` column added (or overwritten).
 classify_tier <- function(trials, tol = FLOAT_TOLERANCE) {
 
-  # Hey humans. this error handling is a bit verbose. Just leave default columns and it will be fine. this is agent's way to write tests 
   required <- c("true_larger", "surround_a_n", "surround_b_n",
                  "surround_a_size", "surround_b_size")
   missing <- setdiff(required, names(trials))
