@@ -99,16 +99,23 @@ Using the current defaults in `config/defaults.R`, the number of distinct discre
 | `canvas_width` | 3 | 512, 768, 1024 |
 | `canvas_height` | 3 | 512, 768, 1024 |
 | `background_color` | 2 | white, black |
-| `test_*_shape` (×2) | 2 | circle, square |
-| `test_*_color` (×2) | 5 | 5 hex codes |
-| `test_*_fill` (×2) | 6 | 5 hex codes + `NA` |
-| `surround_*_shape` (×2) | 2 | circle, square |
-| `surround_*_n` (×2) | 5 (+1 for `n=0`) | 4, 5, 6, 7, 8 (or 0 = no surrounds) |
-| `surround_*_color` (×2) | 5 | 5 hex codes |
-| `surround_*_fill` (×2) | 6 | 5 hex codes + `NA` |
+| `test_a_shape` | 2 | circle, square |
+| `test_a_color` | 5 | 5 hex codes |
+| `test_a_fill` | 6 | 5 hex codes + `NA` |
+| `test_b_shape` | 2 | circle, square |
+| `test_b_color` | 5 | 5 hex codes |
+| `test_b_fill` | 6 | 5 hex codes + `NA` |
+| `surround_a_shape` | 2 | circle, square |
+| `surround_a_n` | 6 | 0, 4, 5, 6, 7, 8 |
+| `surround_a_color` | 5 | 5 hex codes |
+| `surround_a_fill` | 6 | 5 hex codes + `NA` |
+| `surround_b_shape` | 2 | circle, square |
+| `surround_b_n` | 6 | 0, 4, 5, 6, 7, 8 |
+| `surround_b_color` | 5 | 5 hex codes |
+| `surround_b_fill` | 6 | 5 hex codes + `NA` |
 | `file_format` | 3 | png, svg, webp |
 
-**Total discrete combinations: ~52.8 billion**
+3 × 3 × 3 × 2 × 2 × 5 × 6 × 2 × 5 × 6 × 2 × 6 × 5 × 6 × 2 × 6 × 5 × 6 × 3 = **~75.6 billion**
 
 > **Note:** Six parameters are continuous rather than discrete: `test_a_size`,
 > `test_b_size`, `surround_a_size`, `surround_b_size`, `surround_a_distance`,
