@@ -48,7 +48,6 @@ FILE_FORMAT_POOL <- c("png", "svg", "webp")
 FLOAT_TOLERANCE <- 1e-9
 
 # --- Design defaults ---
-DEFAULT_SEED         <- NULL   # NULL = generate a random seed
 DEFAULT_N_PER_TIER   <- 50L   # Minimum trials per tier in generate_design()
 DEFAULT_FILE_FORMAT  <- "png"
 DEFAULT_CANVAS_WIDTH  <- 768L

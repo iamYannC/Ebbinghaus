@@ -67,18 +67,6 @@ min_distance_no_surround_overlap <- function(n, s, shape = "circle", gap_frac = 
   effective_r * (1 + gap_frac) / sin(pi / n)
 }
 
-#' Maximum extent of a surround group from the test center.
-#' This is the surround distance + effective surround radius (the outer edge).
-#'
-#' @param distance Center-to-center distance
-#' @param surround_size Surround radius/half-side
-#' @param shape Shape type ("circle" or "square")
-#' @return Outer extent radius
-surround_outer_extent <- function(distance, surround_size, shape = "circle") {
-  effective_r <- if (shape == "square") surround_size * sqrt(2) else surround_size
-  distance + effective_r
-}
-
 #' Compute the distance between group centers A and B.
 #'
 #' @param orientation Trial orientation
