@@ -7,7 +7,7 @@
 # with the correct schema.
 # =============================================================================
 
-source("Ebbinghaus/R/generate_trial.R")
+source("R/generate_trial.R")
 
 #' Generate a complete design matrix of trials
 #'

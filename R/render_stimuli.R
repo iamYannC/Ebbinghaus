@@ -5,7 +5,7 @@
 # Has no opinions about experimental design — renders whatever it receives.
 # =============================================================================
 
-source("Ebbinghaus/R/draw_trial.R")
+source("R/draw_trial.R")
 
 #' Render stimulus images for a trial table
 #'
