@@ -19,3 +19,6 @@ output/
 # OS
 .DS_Store
 Thumbs.db
+
+# Development
+/Ebb-dev
