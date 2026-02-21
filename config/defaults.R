@@ -12,6 +12,8 @@
 # =============================================================================
 
 # --- Shape pools ---
+# This defines which shapes are available for random selection. The geometric
+# definition of each shape (how it is drawn) lives in R/draw_shape.R.
 SHAPE_POOL <- c("circle", "square")
 
 # --- Size ranges (as proportion of canvas min-dimension) ---

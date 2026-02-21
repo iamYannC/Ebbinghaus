@@ -26,7 +26,7 @@ strip_answer_from_path <- function(path) {
 #' file_path pointing to the clean copies.
 #'
 #' @param trials Data frame with trials schema (needs `file_path` column).
-#' @param output_dir Directory for the stripped copies. Default: "Ebbinghaus/images_eval"
+#' @param output_dir Directory for the stripped copies. Default: "images_eval"
 #' @param verbose Print progress. Default TRUE.
 #'
 #' @return The input trials data frame with `file_path` updated to the

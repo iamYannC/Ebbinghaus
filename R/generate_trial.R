@@ -101,8 +101,10 @@ group_separation <- function(orientation, canvas_w, canvas_h) {
 
 #' Generate a single random trial
 #'
-#' @param seed Integer seed for reproducibility. NULL = generate a random seed.
-#' @param tier Target tier (0, 1, 2, 3). NULL = unconstrained.
+#' @param seed Integer seed for reproducibility. `NULL` = generate a random seed.
+#' @param tier Target tier (`0`, `1`, `2`, `3`). `NULL` = unconstrained (any tier
+#'   may result). `NA` is not valid—`NA` tiers are only produced by
+#'   [classify_tier()] for neutral/unclassifiable trials.
 #' @param orientation Fixed orientation, or NULL for random.
 #' @param shape_pool Character vector of shapes to sample from.
 #' @param size_range Numeric vector of length 2: min and max test size (proportions).
@@ -158,6 +160,10 @@ generate_trial <- function(
   group_sep <- group_separation(orientation, canvas_w, canvas_h)
 
   # --- Test stimuli base parameters ---
+  # Note: test_b_size is NOT set here. It is assigned in the tier-constrained
+
+  # logic below, because it depends on the target tier (e.g., equal to
+  # test_a_size for Tier 1, forced to differ for Tiers 2/3).
   test_a_shape <- sample(shape_pool, 1)
   test_a_size  <- runif(1, size_range[1], size_range[2]) * scale
   test_a_color <- pick_contrasting_color(color_pool, bg_color)
@@ -202,6 +208,16 @@ generate_trial <- function(
   half_budget <- group_sep * (1 - 0.30) / 2  # each group gets half, with gap
 
   # --- Tier-constrained logic for SIZES ---
+  # NULL = unconstrained (generate freely, any tier may result).
+
+  # NA is not a valid request: NA_integer_ is an *output* of classify_tier()
+
+  # for neutral/unclassifiable trials, not something that can be targeted.
+  if (!is.null(tier) && is.na(tier)) {
+    stop("tier = NA is not a valid target. Use NULL for unconstrained generation. ",
+         "NA tiers are only assigned by classify_tier() for neutral/unclassifiable trials.")
+  }
+
   if (is.null(tier)) {
     test_b_size      <- runif(1, size_range[1], size_range[2]) * scale
     surround_a_size  <- runif(1, surround_size_range[1], surround_size_range[2]) * scale
@@ -269,7 +285,7 @@ generate_trial <- function(
     }
 
   } else {
-    stop("Invalid tier: ", tier, ". Must be 0, 1, 2, 3, or NULL.") # is it though? in classify_tier.R: trials$tier[i] <- NA_integer_
+    stop("Invalid tier: ", tier, ". Must be 0, 1, 2, 3, or NULL (unconstrained).")
   }
 
   # =========================================================================

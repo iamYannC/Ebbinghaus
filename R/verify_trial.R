@@ -14,7 +14,7 @@ source("Ebbinghaus/config/defaults.R")
 #' @param trials A data frame with at least `test_a_size` and `test_b_size`.
 #' @param tol Floating-point tolerance for equality. Default from config.
 #'
-#' @return The input data frame with `true_larger` and `true_diff_pct`
+#' @return The input data frame with `true_larger` and `true_diff_ratio`
 #'   columns added (or overwritten).
 verify_trial <- function(trials, tol = FLOAT_TOLERANCE) {
 
@@ -33,10 +33,10 @@ verify_trial <- function(trials, tol = FLOAT_TOLERANCE) {
   )
 
   max_size <- pmax(trials$test_a_size, trials$test_b_size)
-  trials$true_diff_pct <- abs(diff) / max_size * 100
+  trials$true_diff_ratio <- abs(diff) / max_size
 
-  # Equal trials should have exactly 0 diff_pct (not floating-point noise)
-  trials$true_diff_pct[trials$true_larger == "equal"] <- 0
+  # Equal trials should have exactly 0 diff_ratio (not floating-point noise)
+  trials$true_diff_ratio[trials$true_larger == "equal"] <- 0
 
   trials
 }
