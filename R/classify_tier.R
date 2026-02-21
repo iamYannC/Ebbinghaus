@@ -12,7 +12,7 @@
 #   NA: Neutral / unclassifiable (e.g., equal surround sizes with unequal tests)
 # =============================================================================
 
-source("Ebbinghaus/config/defaults.R")
+source("config/defaults.R")
 
 #' Classify trials into difficulty tiers
 #'

@@ -8,7 +8,7 @@
 # modify, or infer any parameters.
 # =============================================================================
 
-source("Ebbinghaus/R/draw_shape.R")
+source("R/draw_shape.R")
 
 #' Draw a complete Ebbinghaus stimulus from trial parameters
 #'

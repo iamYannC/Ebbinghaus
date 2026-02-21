@@ -12,9 +12,9 @@
 #   - No cross-group overlap (group A surrounds don't reach group B test)
 # =============================================================================
 
-source("Ebbinghaus/config/defaults.R")
-source("Ebbinghaus/R/verify_trial.R")
-source("Ebbinghaus/R/classify_tier.R")
+source("config/defaults.R")
+source("R/verify_trial.R")
+source("R/classify_tier.R")
 
 
 # =============================================================================

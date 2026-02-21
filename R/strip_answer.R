@@ -46,15 +46,12 @@ strip_answer_from_images <- function(trials, output_dir = "images_eval",
     src <- trials$file_path_original[i]
     dst <- trials$file_path[i]
 
-    # Normalize source path (remove leading "Ebbinghaus/" if present)
-    src_normalized <- sub("^Ebbinghaus/", "", src)
-    
-    if (!file.exists(src_normalized)) {
-      warning("Source file not found: ", src_normalized, " (original: ", src, ")")
+    if (!file.exists(src)) {
+      warning("Source file not found: ", src)
       next
     }
 
-    file.copy(src_normalized, dst, overwrite = TRUE)
+    file.copy(src, dst, overwrite = TRUE)
   }
 
   if (verbose) {

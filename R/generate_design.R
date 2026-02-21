@@ -7,7 +7,7 @@
 # with the correct schema.
 # =============================================================================
 
-source("Ebbinghaus/R/generate_trial.R")
+source("R/generate_trial.R")
 
 #' Generate a complete design matrix of trials
 #'
@@ -27,20 +27,20 @@ generate_design <- function(
     seed        = NULL,
     n_per_tier  = DEFAULT_N_PER_TIER,
     file_format = DEFAULT_FILE_FORMAT,
-    image_dir   = "Ebbinghaus/images",
+    image_dir   = "images",
     ...
 ) {
 
   # --- Master seed ---
   if (is.null(seed)) {
-    seed <- sample.int(1e7, 1)
+    seed <- sample(-1e9:1e9, 1)
     message("Using auto-generated master seed: ", seed)
   }
   set.seed(seed)
 
   # --- Generate per-trial seeds deterministically from master seed ---
   total_trials <- n_per_tier * 4L
-  trial_seeds <- sample.int(1e7, total_trials)
+  trial_seeds <- sample(-1e9:1e9, total_trials)
 
   # --- Generate trials, stratified by tier ---
   tiers <- rep(0:3, each = n_per_tier)
