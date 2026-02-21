@@ -83,9 +83,10 @@ trials <- generate_design(seed = 7042)
 render_stimuli(trials)  # renders to images/
 ```
 
-### Pattern 2: Filter an existing trial table
+### Pattern 2: Filter a saved or demo trial table
 
 ```r
+# If you saved trials in a previous step, or are using the bundled demo dataset:
 trials <- read.csv("data/trials.csv")
 
 # Only diagonal, circle-only, Tier 2 trials
