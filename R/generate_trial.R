@@ -116,6 +116,7 @@ group_separation <- function(orientation, canvas_w, canvas_h) {
 #' @param orientation_pool Character vector of orientations to sample from.
 #' @param file_format File format for rendering.
 #'
+#' @note Default values are set in config/defaults.R
 #' @return A one-row data frame with the complete trials schema.
 generate_trial <- function(
     seed                    = NULL,
@@ -136,7 +137,7 @@ generate_trial <- function(
 
   # --- Seed handling ---
   if (is.null(seed)) {
-    seed <- sample.int(1e7, 1)
+    seed <- sample(-1e9:1e9, 1) # lets go wild -B:B
   }
   set.seed(seed)
 
@@ -183,6 +184,7 @@ generate_trial <- function(
   #   1. Surrounds don't overlap each other in the ring
   #   2. The group's outer extent doesn't exceed half the group separation
   # We use half group_sep as the budget per side (conservative).
+  # If you really feel like, you are welcome to modify this, just remember: you break you pay...
   cap_surround_size <- function(raw_size, n, test_sz, test_shape, surr_shape, half_budget) {
     eff_test <- if (test_shape == "square") test_sz * sqrt(2) else test_sz
     shape_factor <- if (surr_shape == "square") sqrt(2) else 1
@@ -267,7 +269,7 @@ generate_trial <- function(
     }
 
   } else {
-    stop("Invalid tier: ", tier, ". Must be 0, 1, 2, 3, or NULL.")
+    stop("Invalid tier: ", tier, ". Must be 0, 1, 2, 3, or NULL.") # is it though? in classify_tier.R: trials$tier[i] <- NA_integer_
   }
 
   # =========================================================================
