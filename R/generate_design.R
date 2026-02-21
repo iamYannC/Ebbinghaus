@@ -12,27 +12,24 @@ source("R/generate_trial.R")
 #' Generate a complete design matrix of trials
 #'
 #' Creates a balanced trial table with representation across tiers.
-#' Each trial gets a unique trial_id and file_path. The resulting table is
-#' written to `out_path` (default: `data/trials.csv`) and also returned
-#' invisibly for immediate use.
+#' Each trial gets a unique trial_id and file_path.
 #'
 #' @param seed Master seed for the entire design. Individual trial seeds are
 #'   derived deterministically from this.
 #' @param n_per_tier Integer: number of trials per tier (0, 1, 2, 3).
 #' @param file_format Default file format for images.
 #' @param image_dir Directory for images (relative to project root).
-#' @param out_path Path to write the trials CSV. Default: `"data/trials.csv"`.
-#'   Set to `NULL` to skip writing.
 #' @param ... Additional arguments passed to generate_trial() (e.g.,
 #'   shape_pool, size_range, color_pool, etc.)
 #'
-#' @return The trials data frame (returned invisibly).
+#' @return A data frame with complete trials schema, verified and classified.
+#'   Not written to disk automatically—use
+#'   `write.csv(trials, "data/trials.csv", row.names = FALSE)` to persist.
 generate_design <- function(
     seed        = NULL,
     n_per_tier  = DEFAULT_N_PER_TIER,
     file_format = DEFAULT_FILE_FORMAT,
     image_dir   = "images",
-    out_path    = "data/trials.csv",
     ...
 ) {
 
@@ -87,13 +84,5 @@ generate_design <- function(
   )
   rownames(trials) <- NULL
 
-  # --- Write to disk ---
-  if (!is.null(out_path)) {
-    out_dir <- dirname(out_path)
-    if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
-    write.csv(trials, out_path, row.names = FALSE)
-    message("Wrote ", nrow(trials), " trials to ", out_path)
-  }
-
-  invisible(trials)
+  trials
 }

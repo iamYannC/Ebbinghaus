@@ -62,17 +62,15 @@ This document provides a complete reference of all variables used in the project
 ```r
 source("R/generate_design.R")
 trials <- generate_design(seed = 999, n_per_tier = 50)  # 50 trials per tier
-# -> writes trial table to data/trials.csv
-render_stimuli(trials)
-# -> writes stimulus images to images/
+# optional: write.csv(trials, "data/trials.csv", row.names = FALSE)
+render_stimuli(trials)  # renders to images/
 ```
 
 **Option 2: Filter existing trials**
 ```r
-trials <- read.csv("data/trials.csv")  # data/trials.csv
+trials <- read.csv("data/trials.csv")
 my_subset <- trials |> filter(tier == 1, orientation == "horizontal")
-render_stimuli(my_subset)
-# -> writes stimulus images to images/
+render_stimuli(my_subset)  # renders to images/
 ```
 
 > **Tip:** If you want to change the default parameter pools or ranges (e.g., add
