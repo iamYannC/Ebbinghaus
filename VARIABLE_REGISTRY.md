@@ -115,7 +115,7 @@ Using the current defaults in `config/defaults.R`, the number of distinct discre
 | `surround_b_fill` | 6 | 5 hex codes + `NA` |
 | `file_format` | 3 | png, svg, webp |
 
-3 × 3 × 3 × 2 × 2 × 5 × 6 × 2 × 5 × 6 × 2 × 6 × 5 × 6 × 2 × 6 × 5 × 6 × 3 = **~75.6 billion**
+Assuming current defaults, the total number of options is roughly **~75.6 billion**.
 
 > **Note:** Six parameters are continuous rather than discrete: `test_a_size`,
 > `test_b_size`, `surround_a_size`, `surround_b_size`, `surround_a_distance`,
