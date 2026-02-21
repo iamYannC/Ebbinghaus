@@ -35,14 +35,14 @@ generate_design <- function(
 
   # --- Master seed ---
   if (is.null(seed)) {
-    seed <- sample(-1e9:1e9, 1)
+    seed <- round(runif(1, -1e9, 1e9))
     message("Using auto-generated master seed: ", seed)
   }
   set.seed(seed)
 
   # --- Generate per-trial seeds deterministically from master seed ---
   total_trials <- n_per_tier * 4L
-  trial_seeds <- sample(-1e9:1e9, total_trials)
+  trial_seeds <- round(runif(total_trials, -1e9, 1e9))
 
   # --- Generate trials, stratified by tier ---
   tiers <- rep(0:3, each = n_per_tier)

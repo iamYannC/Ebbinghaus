@@ -139,7 +139,7 @@ generate_trial <- function(
 
   # --- Seed handling ---
   if (is.null(seed)) {
-    seed <- sample(-1e9:1e9, 1) # lets go wild -B:B
+    seed <- round(runif(1, -1e9, 1e9))
   }
   set.seed(seed)
 
