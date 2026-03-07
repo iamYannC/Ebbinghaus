@@ -1,46 +1,48 @@
 # =============================================================================
-# evaluate.R — Phase 2: Evaluation Pipeline
+# evaluate.R — Phase 2: Evaluation Pipeline (vitals-based)
 # =============================================================================
+# Evaluates VLM performance on the Ebbinghaus benchmark using the `vitals`
+# framework for structured logging, parallel evaluation, and analysis.
+#
 # Provides:
-#   evaluate_trial()   — send one image + prompt to a VLM, return a result row
-#   evaluate_all()     — iterate over trials × prompts × model configs,
-#                        append results to evals.csv
-#   parse_response()   — extract response_larger from raw model text
-#   fill_prompt()      — resolve prompt templates for a given trial
+#   build_dataset()        — construct a vitals-compatible dataset tibble
+#   ebbinghaus_solver()    — custom solver: sends image + text to VLM
+#   ebbinghaus_scorer()    — custom scorer: deterministic parse + compare
+#   run_evals()            — high-level orchestration across prompts × models
+#   fill_prompt()          — resolve prompt template placeholders
+#   parse_response()       — extract canonical answer from raw model text
 #
-# Uses the `ellmer` package for all LLM interaction. API keys are read from
-# environment variables by ellmer:
+# Uses `vitals` for task orchestration and `ellmer` for LLM interaction.
+# API keys are read from environment variables by ellmer:
 #   ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY
-#
-# Recommended: store keys in the project .Renviron file:
-#   usethis::edit_r_environ("project")
 #
 # Usage:
 #   source("R/evaluate.R")
 #
-#   model_cfg <- list(
-#     provider    = "openai",
-#     model       = "gpt-4o",
-#     temperature = 0,
-#     max_tokens  = 512
-#   )
+#   trials  <- read.csv("data/trials.csv", stringsAsFactors = FALSE)
+#   prompts <- read.csv("data/prompts.csv", stringsAsFactors = FALSE)
 #
-#   results <- evaluate_all(
-#     trials   = read.csv("data/trials.csv"),
-#     prompts  = read.csv("data/prompts.csv"),
-#     models   = list(model_cfg),
-#     out_path = "data/evals.csv"
+#   tasks <- run_evals(
+#     trials  = trials,
+#     prompts = prompts,
+#     models  = list(
+#       list(provider = "openai",    model = "gpt-4o"),
+#       list(provider = "anthropic", model = "claude-sonnet-4-20250514")
+#     )
 #   )
 # =============================================================================
 
+library(vitals)
 library(ellmer)
+library(tibble)
+library(purrr)
+
+source("R/strip_answer.R")
 
 # =============================================================================
-# Direction helpers
+# Direction helpers (unchanged from original)
 # =============================================================================
 
-# Map orientation to the direction words used in prompts for positions A and B.
-# These match the convention in trials: A = left/top/upper-left.
 DIRECTION_WORDS <- list(
   horizontal = list(a = "left",       b = "right"),
   vertical   = list(a = "top",        b = "bottom"),
@@ -69,7 +71,7 @@ fill_prompt <- function(template, trial) {
 }
 
 # =============================================================================
-# Response parser
+# Response parser (unchanged from original)
 # =============================================================================
 
 #' Extract a structured response_larger value from raw model text.
@@ -129,248 +131,239 @@ parse_response <- function(raw_response, orientation, response_format = "forced_
 }
 
 # =============================================================================
-# Chat constructor
+# Dataset builder
 # =============================================================================
 
-#' Create an ellmer Chat object for a given provider and model config.
+#' Build a vitals-compatible dataset from trials and a single prompt variant.
 #'
-#' @param provider     Character: "anthropic", "openai", or "google".
-#' @param model        Character: model identifier.
-#' @param system_prompt Character: system prompt.
-#' @param temperature  Numeric: sampling temperature.
-#' @param max_tokens   Integer: max response tokens.
-#' @return An ellmer Chat object (single-use — one chat per trial).
-.make_chat <- function(provider, model, system_prompt, temperature, max_tokens) {
-  p <- params(temperature = temperature, max_tokens = max_tokens)
-
-  switch(provider,
-    anthropic = chat_anthropic(
-      system_prompt = system_prompt,
-      model         = model,
-      params        = p
+#' Each row represents one (trial, prompt) pair. The `input` column contains
+#' the filled user prompt, `target` contains the ground truth answer, and
+#' metadata columns carry everything needed by the solver and scorer.
+#'
+#' @param trials    Data frame from trials.csv.
+#' @param prompt    One-row data frame from prompts.csv.
+#' @param image_dir Directory with answer-stripped images.
+#' @return A tibble suitable for `Task$new(dataset = ...)`.
+build_dataset <- function(trials, prompt, image_dir = "images_eval") {
+  tibble(
+    id              = as.character(trials$trial_id),
+    input           = vapply(
+      seq_len(nrow(trials)),
+      function(i) fill_prompt(prompt$user_prompt_template, trials[i, ]),
+      character(1)
     ),
-    openai = chat_openai(
-      system_prompt = system_prompt,
-      model         = model,
-      params        = p
-    ),
-    google = chat_google_gemini(
-      system_prompt = system_prompt,
-      model         = model,
-      params        = p
-    ),
-    github = chat_github(
-      system_prompt = system_prompt,
-      model         = model,
-      params        = p
-    ),
-    stop("Unknown provider: ", provider, ". Use 'anthropic', 'openai', 'google', or 'github'.")
+    target          = trials$true_larger,
+    # Metadata for solver and scorer
+    trial_id        = trials$trial_id,
+    orientation     = trials$orientation,
+    tier            = trials$tier,
+    true_diff_ratio = trials$true_diff_ratio,
+    prompt_id       = prompt$prompt_id,
+    response_format = prompt$response_format,
+    image_path      = file.path(
+      image_dir,
+      paste0(trials$trial_id, ".", trials$file_format)
+    )
   )
 }
 
 # =============================================================================
-# Core evaluation function
+# Custom solver
 # =============================================================================
 
-#' Evaluate a single trial with one prompt and one model configuration.
+#' Create an Ebbinghaus solver that sends image + text to a VLM.
 #'
-#' Creates a fresh Chat object, sends the stimulus image with the filled
-#' prompt, parses the response, and returns a one-row data frame conforming
-#' to the evals.csv schema.
+#' Returns a solver function compatible with vitals `Task$new(solver = ...)`.
+#' The solver reads image paths from the dataset (passed via `image_paths`
+#' argument) and sends each image alongside the text prompt to the model.
 #'
-#' @param trial      One-row data frame from trials.csv.
-#' @param prompt     One-row data frame from prompts.csv.
-#' @param provider   Character: "anthropic", "openai", or "google".
-#' @param model      Character: model identifier as used by the provider API.
-#' @param model_version Character or NA: optional version label.
-#' @param temperature Numeric: sampling temperature.
-#' @param max_tokens  Integer: max response tokens.
-#' @param image_dir   Character: directory containing eval images (answer-stripped).
-#'   Falls back to trial$file_path if the eval copy doesn't exist.
-#' @param eval_id     Integer: identifier for this row. NA = caller assigns.
-#'
-#' @return A one-row data frame with the evals.csv schema.
-evaluate_trial <- function(trial, prompt,
-                           provider, model,
-                           model_version = NA_character_,
-                           temperature   = 0,
-                           max_tokens    = 512L,
-                           image_dir     = "images_eval",
-                           eval_id       = NA_integer_) {
+#' @param solver_chat An ellmer Chat object (will be cloned per sample).
+#' @return A solver function.
+ebbinghaus_solver <- function(inputs, ..., solver_chat, image_paths) {
 
-  # Resolve image path: prefer answer-stripped copy
-  stripped_name <- paste0(trial$trial_id, ".", trial$file_format)
-  stripped_path <- file.path(image_dir, stripped_name)
-  
-  image_path <- if (file.exists(stripped_path)) {
-    stripped_path
-  } else if (file.exists(trial$file_path)) {
-    trial$file_path
-  } else {
-    trial$file_path  # fallback (will fail at the check below)
-  }
-
-  if (!file.exists(image_path)) {
-    return(data.frame(
-      eval_id = as.integer(eval_id), trial_id = trial$trial_id,
-      prompt_id = prompt$prompt_id, provider = provider, model = model,
-      model_version = as.character(model_version), temperature = temperature,
-      max_tokens = as.integer(max_tokens), response_larger = "parse_error",
-      response_confidence = NA_real_, raw_response = NA_character_,
-      latency_ms = NA_integer_,
-      timestamp = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
-      error = paste0("Image not found: ", image_path),
-      stringsAsFactors = FALSE
-    ))
-  }
-
-  # Fill prompt template
-  user_prompt <- fill_prompt(prompt$user_prompt_template, trial)
-
-  # Create a fresh chat object (one per trial — no conversation history)
-  t_start <- proc.time()[["elapsed"]]
-
-  result <- tryCatch({
-    ch <- .make_chat(provider, model, prompt$system_prompt, temperature, max_tokens)
-    # Send image + text; content_image_file handles encoding per provider
-    response_text <- ch$chat(user_prompt, content_image_file(image_path, resize = "none"))
-    list(text = response_text, error = NA_character_)
-  }, error = function(e) {
-    list(text = NA_character_, error = conditionMessage(e))
+  # Build one chat clone per sample and send image + text
+  chats <- map2(inputs, image_paths, function(prompt_text, img_path) {
+    ch <- solver_chat$clone()
+    ch$chat(prompt_text, content_image_file(img_path, resize = "none"))
+    ch
   })
 
-  latency_ms <- as.integer(round((proc.time()[["elapsed"]] - t_start) * 1000))
-
-  # Parse response
-  response_larger <- if (!is.na(result$error)) {
-    "parse_error"
-  } else {
-    parse_response(result$text, trial$orientation, prompt$response_format)
-  }
-
-  data.frame(
-    eval_id            = as.integer(eval_id),
-    trial_id           = trial$trial_id,
-    prompt_id          = prompt$prompt_id,
-    provider           = provider,
-    model              = model,
-    model_version      = as.character(model_version),
-    temperature        = temperature,
-    max_tokens         = as.integer(max_tokens),
-    response_larger    = response_larger,
-    response_confidence = NA_real_,
-    raw_response       = if (is.na(result$error)) result$text else NA_character_,
-    latency_ms         = latency_ms,
-    timestamp          = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
-    error              = result$error,
-    stringsAsFactors   = FALSE
+  list(
+    result      = map_chr(chats, function(ch) ch$last_turn()@text),
+    solver_chat = chats
   )
 }
 
 # =============================================================================
-# Batch evaluator
+# Custom scorer
 # =============================================================================
 
-#' Run evaluations across all combinations of trials × prompts × model configs.
+#' Score Ebbinghaus evaluation results using deterministic parsing.
 #'
-#' Results are appended to `out_path` (CSV) after each trial so that progress
-#' is saved incrementally. Already-evaluated combinations are skipped if
-#' `out_path` already exists (resume support).
+#' Parses each raw model response using `parse_response()`, compares to
+#' `target`, and returns an ordered factor (I/C). Stores parsed responses
+#' in `scorer_metadata`.
 #'
-#' @param trials    Data frame: trials table (or filtered subset).
-#' @param prompts   Data frame: prompts table.
-#' @param models    List of named lists, each with fields:
-#'                    provider, model, model_version (opt.), temperature, max_tokens.
-#' @param out_path  Character: path to evals.csv output file.
-#' @param image_dir Character: directory with answer-stripped images.
-#' @param verbose   Logical: print progress messages.
-#'
-#' @return Invisibly returns the full evals data frame (loaded from out_path).
-evaluate_all <- function(trials,
-                         prompts,
-                         models,
-                         out_path  = "data/evals.csv",
-                         image_dir = "images_eval",
-                         verbose   = TRUE) {
+#' @param samples Tibble from `task$get_samples()` — includes `result`,
+#'   `target`, `orientation`, `response_format`.
+#' @return A list with `score` (ordered factor) and `scorer_metadata`.
+ebbinghaus_scorer <- function(samples) {
 
-  # Load existing results for resume support
-  if (file.exists(out_path)) {
-    existing <- read.csv(out_path, stringsAsFactors = FALSE)
-    next_id  <- max(existing$eval_id, na.rm = TRUE) + 1L
-    if (verbose) message("Resuming: ", nrow(existing), " evals already complete.")
-  } else {
-    existing <- NULL
-    next_id  <- 1L
-  }
-
-  # Build the full job list: trials × prompts × models
-  jobs <- expand.grid(
-    trial_idx  = seq_len(nrow(trials)),
-    prompt_idx = seq_len(nrow(prompts)),
-    model_idx  = seq_along(models),
-    stringsAsFactors = FALSE
+  parsed <- pmap_chr(
+    list(samples$result, samples$orientation, samples$response_format),
+    function(result, orientation, response_format) {
+      parse_response(result, orientation, response_format)
+    }
   )
 
-  # Filter out already-completed combinations
-  if (!is.null(existing) && nrow(existing) > 0) {
-    done_keys <- paste(existing$trial_id, existing$prompt_id,
-                       existing$provider, existing$model, existing$temperature,
-                       sep = "|")
-    jobs$key <- with(jobs, {
-      mapply(function(ti, pi, mi) {
-        t  <- trials[ti, ]
-        p  <- prompts[pi, ]
-        m  <- models[[mi]]
-        paste(t$trial_id, p$prompt_id, m$provider, m$model,
-              m$temperature, sep = "|")
-      }, trial_idx, prompt_idx, model_idx)
-    })
-    jobs <- jobs[!jobs$key %in% done_keys, ]
-  }
+  correct <- (parsed == samples$target)
 
-  if (nrow(jobs) == 0) {
-    if (verbose) message("All evaluations already complete.")
-    return(invisible(existing))
-  }
+  scores <- factor(
+    ifelse(correct, "C", "I"),
+    levels  = c("I", "C"),
+    ordered = TRUE
+  )
 
-  if (verbose) message("Running ", nrow(jobs), " evaluations...")
-
-  for (i in seq_len(nrow(jobs))) {
-    trial  <- trials[jobs$trial_idx[i], ]
-    prompt <- prompts[jobs$prompt_idx[i], ]
-    mcfg   <- models[[jobs$model_idx[i]]]
-
-    if (verbose) {
-      message(sprintf(
-        "[%d/%d] trial %d | prompt %d | %s/%s",
-        i, nrow(jobs), trial$trial_id, prompt$prompt_id,
-        mcfg$provider, mcfg$model
-      ))
-    }
-
-    row <- evaluate_trial(
-      trial         = trial,
-      prompt        = prompt,
-      provider      = mcfg$provider,
-      model         = mcfg$model,
-      model_version = mcfg$model_version %||% NA_character_,
-      temperature   = mcfg$temperature   %||% 0,
-      max_tokens    = mcfg$max_tokens    %||% 512L,
-      image_dir     = image_dir,
-      eval_id       = next_id
+  list(
+    score           = scores,
+    scorer_metadata = tibble(
+      parsed_response = parsed,
+      correct         = correct
     )
-    next_id <- next_id + 1L
+  )
+}
 
-    # Append to CSV incrementally
-    write.table(row,
-                file      = out_path,
-                append    = file.exists(out_path),
-                col.names = !file.exists(out_path),
-                row.names = FALSE,
-                sep       = ",",
-                quote     = TRUE)
+# =============================================================================
+# Chat constructor helper
+# =============================================================================
+
+#' Create an ellmer Chat for a model config + system prompt.
+#'
+#' @param model_cfg Named list with `provider`, `model`, and optionally
+#'   `temperature`, `max_tokens`.
+#' @param system_prompt Character: system prompt string.
+#' @return An ellmer Chat object.
+make_chat <- function(model_cfg, system_prompt) {
+  p <- params(
+    temperature = model_cfg$temperature %||% 0,
+    max_tokens  = model_cfg$max_tokens  %||% 512L
+  )
+
+  switch(model_cfg$provider,
+    anthropic = chat_anthropic(
+      system_prompt = system_prompt, model = model_cfg$model, params = p
+    ),
+    openai = chat_openai(
+      system_prompt = system_prompt, model = model_cfg$model, params = p
+    ),
+    google = chat_google_gemini(
+      system_prompt = system_prompt, model = model_cfg$model, params = p
+    ),
+    github = chat_github(
+      system_prompt = system_prompt, model = model_cfg$model, params = p
+    ),
+    stop("Unknown provider: ", model_cfg$provider,
+         ". Use 'anthropic', 'openai', 'google', or 'github'.")
+  )
+}
+
+# =============================================================================
+# High-level orchestration
+# =============================================================================
+
+#' Run the full evaluation across prompts × models.
+#'
+#' Creates one vitals Task per (prompt, model) combination, evaluates it,
+#' and returns a named list of Task objects. Use `vitals_bind()` on the
+#' result to get a combined data frame for analysis.
+#'
+#' @param trials    Data frame from trials.csv.
+#' @param prompts   Data frame from prompts.csv.
+#' @param models    List of named lists. Each must have `provider` and `model`;
+#'   optionally `temperature`, `max_tokens`. Example:
+#'   `list(provider = "openai", model = "gpt-4o")`.
+#' @param image_dir Directory containing answer-stripped images. If the
+#'   directory doesn't exist, images will be stripped from `images/`.
+#' @param epochs    Number of times to repeat each sample (default 1).
+#' @param view      Open the Inspect log viewer after each eval (default:
+#'   only at the end, not after each task).
+#'
+#' @return A named list of Task objects. Names follow the pattern
+#'   `"<provider>/<model>__<prompt_description>"`.
+run_evals <- function(trials,
+                      prompts,
+                      models,
+                      image_dir = "images_eval",
+                      epochs    = 1L,
+                      view      = FALSE) {
+
+  # Strip answers from images if needed
+  if (!dir.exists(image_dir) || length(list.files(image_dir)) == 0) {
+    message("Stripping answers from images...")
+    strip_answer_from_images(trials, image_dir)
   }
 
-  if (verbose) message("Done. Results written to: ", out_path)
-  invisible(read.csv(out_path, stringsAsFactors = FALSE))
+  tasks <- list()
+
+  for (mi in seq_along(models)) {
+    mcfg <- models[[mi]]
+    model_label <- paste0(mcfg$provider, "/", mcfg$model)
+
+    for (pi in seq_len(nrow(prompts))) {
+      prompt <- prompts[pi, ]
+      task_name <- paste0(model_label, "__", prompt$description)
+
+      message(sprintf("Creating task: %s", task_name))
+
+      dataset <- build_dataset(trials, prompt, image_dir)
+      chat    <- make_chat(mcfg, prompt$system_prompt)
+
+      task <- Task$new(
+        dataset = dataset,
+        solver  = ebbinghaus_solver,
+        scorer  = ebbinghaus_scorer,
+        epochs  = epochs,
+        name    = task_name
+      )
+
+      message(sprintf("Evaluating: %s", task_name))
+
+      task$eval(
+        solver_chat = chat,
+        image_paths = dataset$image_path,
+        view        = view
+      )
+
+      tasks[[task_name]] <- task
+    }
+  }
+
+  message("All evaluations complete. ", length(tasks), " tasks evaluated.")
+  message("Use vitals_view() to open the Inspect log viewer.")
+
+  invisible(tasks)
+}
+
+# =============================================================================
+# Results extraction
+# =============================================================================
+
+#' Extract evaluation results from tasks into a flat data frame.
+#'
+#' Combines all Task objects via `vitals_bind()` and unnests metadata
+#' columns needed for downstream analysis. This is the primary bridge
+#' between vitals output and `analyze_results()`.
+#'
+#' @param tasks Named list of Task objects (as returned by `run_evals()`).
+#' @return A tibble with columns: task, id, score, trial_id, orientation,
+#'   tier, true_diff_ratio, prompt_id, parsed_response, correct,
+#'   model_label, prompt_description.
+extract_results <- function(tasks) {
+  bound <- do.call(vitals_bind, tasks)
+
+  # Parse task name to extract model and prompt info
+  bound$model_label <- sub("__.*$", "", bound$task)
+  bound$prompt_description <- sub("^.*__", "", bound$task)
+
+  bound
 }
