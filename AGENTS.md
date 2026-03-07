@@ -21,8 +21,8 @@ All `source()` calls and file paths are relative to the project root (`Ebbinghau
 | `R/generate_design.R` | Entry point for Phase 1 — sources all dependencies |
 | `R/generate_trial.R` | Single trial generator (sources verify_trial, classify_tier, defaults) |
 | `R/render_stimuli.R` | Batch renderer (sources draw_trial → draw_shape) |
-| `R/evaluate.R` | Phase 2 — API evaluation pipeline |
-| `R/analyze.R` | Phase 3 — joins data, computes metrics, generates plots |
+| `R/evaluate.R` | Phase 2 — vitals-based evaluation (custom solver/scorer/orchestrator) |
+| `R/analyze.R` | Phase 3 — joins data, computes 14 metrics (accuracy, d-prime, confusion, etc.), generates 12+ plots |
 | `R/strip_answer.R` | Strips ground truth from image filenames for evaluation |
 | `SPECIFICATION.md` | Complete design spec |
 | `VARIABLE_REGISTRY.md` | All variables, schemas, phase I/O, combinatorics |
@@ -32,8 +32,8 @@ All `source()` calls and file paths are relative to the project root (`Ebbinghau
 | Phase | Input | Output |
 |-------|-------|--------|
 | 1. Stimulus Creation | `source("R/generate_design.R")` | `trials` data frame + images in `images/` |
-| 2. Evaluation | `trials` (or `data/trials.csv`), `data/prompts.csv`, API keys | `data/evals.csv` |
-| 3. Analysis | `data/trials.csv`, `data/evals.csv`, `data/prompts.csv` | Summary tables + plots in `output/` |
+| 2. Evaluation | `trials` (or `data/trials.csv`), `data/prompts.csv`, API keys | vitals JSON logs (viewable via `vitals_view()`) |
+| 3. Analysis | `data/trials.csv`, vitals Task objects (or legacy `data/evals.csv`), `data/prompts.csv` | Summary tables + plots in `output/` |
 
 ## Data schemas
 
@@ -51,6 +51,10 @@ All `source()` calls and file paths are relative to the project root (`Ebbinghau
 - `tier` parameter in `generate_trial()`: `NULL` = unconstrained, `0`/`1`/`2`/`3` = targeted. `NA` is only an output of `classify_tier()`, never a valid input.
 - `generate_design()` is a pure function — returns the data frame without writing to disk.
 - Seed auto-generation uses `round(runif(1, -1e9, 1e9))`, not `sample(-1e9:1e9, 1)` (the latter materializes a 2B-element vector).
+
+## Dependencies
+
+Phase 2 requires the `vitals` package (CRAN v0.2.0+) and `ellmer` for LLM interaction. Evaluation logs are written to the vitals log directory (set via `VITALS_LOG_DIR` env var or `vitals_log_dir_set()`). Use `vitals_view()` or the Inspect log viewer to browse results.
 
 ## Dev notes
 
