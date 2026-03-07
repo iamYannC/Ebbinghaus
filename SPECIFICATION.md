@@ -11,8 +11,8 @@ The project is designed to be **open-sourced**: the trial table and images can b
 | Phase | Name                | Status        |
 |-------|---------------------|---------------|
 | 1     | Stimulus Creation   | **Complete**  |
-| 2     | Evaluation Pipeline | Not started   |
-| 3     | Analysis            | Not started   |
+| 2     | Evaluation Pipeline | **In progress** (vitals-based) |
+| 3     | Analysis            | **Complete**  |
 | 4     | Extensions          | Future        |
 
 ### Core Design Principle: Parameters First, Rendering Second
@@ -43,7 +43,7 @@ Ebbinghaus/
 │   ├── generate_design.R       # Build the full design matrix of trials (Phase 1) ✓
 │   ├── render_stimuli.R        # Batch render trial table to image files (Phase 1) ✓
 │   ├── strip_answer.R          # Strip ground truth from filenames before AI eval (Phase 1) ✓
-│   ├── evaluate.R              # API wrapper: send image + prompt to VLM, parse response (Phase 2)
+│   ├── evaluate.R              # vitals-based evaluation: custom solver/scorer, run_evals() orchestrator (Phase 2)
 │   └── analyze.R               # Join trials ↔ evals, compute metrics, generate plots (Phase 3)
 ├── data/
 │   ├── trials.csv              # Trial metadata table (generated)
@@ -332,11 +332,10 @@ Builds a complete trial table for an experiment. **This is one provided strategy
 
 All downstream functions (`verify_trial()`, `classify_tier()`, `render_stimuli()`) accept any data frame with the correct columns, regardless of how it was created.
 
-**Default strategy (our experiment):**
-- **Core factorial block**: Cross key variables (true_larger × true_diff_ratio levels × surround_size_ratio × orientation). This is the analysis-critical subset.
-- **Tier-stratified block**: Ensure minimum representation per tier (e.g., at least N trials per tier).
-- **Robustness block**: Vary nuisance parameters (color, canvas size, file format, shape combinations) using Latin-square or random sampling to avoid full factorial explosion.
-- **Counterbalancing**: For every trial where A has large surrounds, there should be a matched trial where B has large surrounds (controls for spatial bias).
+**Default strategy (current implementation):**
+- Generate exactly `n_per_tier` trials for each tier (`0`, `1`, `2`, `3`) by calling `generate_trial()` with a fixed target tier.
+- Derive deterministic per-trial seeds from the master `seed`.
+- Shuffle the final rows so tiers are interleaved rather than blocked.
 
 **Parameters:**
 - `seed`: RNG seed for the entire design generation. Stored in each trial row's `seed` column for traceability.
@@ -368,6 +367,16 @@ Takes a trial data frame (or any subset of one) and renders each row to an image
 
 ## Phase 2: Evaluation Pipeline
 
+Phase 2 uses the [`vitals`](https://vitals.tidyverse.org/) package (a port of Python's Inspect framework) for structured LLM evaluation. The pipeline creates one vitals **Task** per (prompt variant, model) combination, evaluates them, and produces persistent JSON logs viewable in the Inspect log viewer.
+
+**Key components:**
+
+- **Custom solver (`ebbinghaus_solver`):** Sends each stimulus image + filled prompt to a VLM. Clones a chat object per sample and calls `$chat()` with `content_image_file()`.
+- **Custom scorer (`ebbinghaus_scorer`):** Deterministic — parses the raw model response via `parse_response()` and compares to the trial's `true_larger` ground truth. No LLM-as-judge needed.
+- **Orchestrator (`run_evals`):** Iterates over prompts × models, creates Tasks, evaluates them, and returns a list of Task objects for analysis.
+
+Results are combined across tasks via `vitals_bind()` for downstream analysis.
+
 ### 2.1 Prompts Table (`prompts.csv`)
 
 | Column                 | Type      | Description                                             |
@@ -397,7 +406,13 @@ Takes a trial data frame (or any subset of one) and renders each row to an image
 
 ---
 
-### 2.2 Evaluation Results Table (`evals.csv`)
+### 2.2 Evaluation Results
+
+**Primary format:** vitals JSON log files (stored in the vitals log directory, viewable with `vitals_view()` or the Inspect log viewer).
+
+**Legacy format:** The table below describes the `evals.csv` schema, which can optionally be exported from vitals results for backward compatibility.
+
+#### `evals.csv` schema (legacy)
 
 | Column                 | Type      | Values / Range                       | Description                                      |
 |------------------------|-----------|--------------------------------------|--------------------------------------------------|
@@ -471,12 +486,34 @@ trials_enriched <- trials |>
 
 ### 3.3 Key Visualizations
 
-1. **Psychometric curve**: x = `true_diff_ratio`, y = P(correct), color = model. Include error bars.
-2. **Confusion matrix heatmap**: true_larger vs response_larger, per model.
-3. **Illusion susceptibility bar chart**: proportion "fooled" on Tier 1, by model.
-4. **Congruency effect plot**: accuracy on Tier 2 vs Tier 3, by model (paired).
-5. **Spatial bias plot**: proportion choosing A vs B, by model and orientation.
-6. **Prompt comparison**: accuracy by prompt variant, faceted by tier.
+All plots are implemented in `R/analyze.R` and saved to `output/` as PNG files.
+
+| # | Plot                           | File                              | Description |
+|---|--------------------------------|-----------------------------------|-------------|
+| 1 | Overall accuracy               | `accuracy_overall.png`            | Horizontal bar chart, one bar per model |
+| 2 | Accuracy by tier               | `accuracy_by_tier.png`            | Grouped bar chart, models × tiers |
+| 3 | Psychometric curve             | `psychometric_curve.png`          | Accuracy vs `true_diff_ratio` bins, with SE error bars, per model |
+| 4 | Illusion susceptibility        | `illusion_susceptibility.png`     | Proportion "fooled" on Tier 1, by model |
+| 5 | Illusion direction             | `illusion_direction.png`          | On Tier 1: which side (A/B) does each model favor? |
+| 6 | Confusion matrix               | `confusion_matrix.png`            | Heatmap of true_larger vs parsed_response, faceted by model |
+| 7 | Spatial bias                   | `spatial_bias.png`                | Proportion choosing A vs B, by model |
+| 8 | Spatial bias by orientation    | `spatial_bias_by_orientation.png` | Same as above, faceted by orientation |
+| 9 | Prompt comparison              | `prompt_comparison.png`           | Accuracy by prompt variant, grouped by model |
+| 10 | Prompt comparison by tier     | `prompt_comparison_by_tier.png`   | Same as above, faceted by tier |
+| 11 | Congruency effect             | `congruency_effect.png`           | Tier 3 − Tier 2 accuracy, by model |
+| 12 | d-prime                       | `dprime.png`                      | Signal detection sensitivity, by model |
+
+Conditional plots (generated only when the data contains the relevant variation):
+
+| Plot                    | Condition                        |
+|-------------------------|----------------------------------|
+| Temperature effects     | Multiple temperature values      |
+| Format effects          | Multiple file formats            |
+| Confidence calibration  | Non-NA confidence values present |
+
+### 3.4 Summary Tables
+
+All tables are saved to `output/` as CSV files: `accuracy_by_model.csv`, `accuracy_by_model_tier.csv`, `accuracy_by_prompt.csv`, `accuracy_by_prompt_tier.csv`, `illusion_susceptibility.csv`, `illusion_direction.csv`, `spatial_bias.csv`, `spatial_bias_by_orientation.csv`, `congruency_effect.csv`, `confusion_matrix.csv`, `dprime.csv`.
 
 ---
 
@@ -487,93 +524,9 @@ The project is organized into four phases. Each phase is self-contained but buil
 | phase_id | phase                    | status       | description                                                                                                                                              | key_inputs                          | key_outputs                              |
 |----------|--------------------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------|------------------------------------------|
 | 1        | Stimulus Creation        | **Complete** | Define trial parameters, compute ground truth, assign difficulty tiers, and render stimulus images. All code that produces the image bank lives here. Includes geometric validation (no overlaps, no occlusion) and color contrast enforcement. | `config/defaults.R`                 | `data/trials.csv`, images in `images/`   |
-| 2        | Evaluation               | Not started  | Send rendered images to VLMs with structured prompts, parse responses, and store results. All API interaction lives here.                                 | `data/trials.csv`, images, `data/prompts.csv` | `data/evals.csv`                  |
-| 3        | Analysis                 | Not started  | Join trial metadata with evaluation results, compute accuracy and bias metrics, generate plots and summary tables.                                        | `data/trials.csv`, `data/evals.csv`, `data/prompts.csv` | Plots, summary tables in `output/` |
+| 2        | Evaluation               | In progress  | Send rendered images to VLMs via the `vitals` framework (custom solver/scorer). Produces structured JSON logs viewable in the Inspect log viewer.          | `data/trials.csv`, images, `data/prompts.csv` | vitals logs (+ optional `data/evals.csv`) |
+| 3        | Analysis                 | Complete     | Join trial metadata with evaluation results, compute accuracy/bias/d-prime metrics, generate 12+ plots and summary tables.                                | `data/trials.csv`, vitals Task objects (or `data/evals.csv`), `data/prompts.csv` | Plots, summary tables in `output/` |
 | 4        | Extensions (future)      | Future       | Expand the benchmark: new shapes, pattern fills, rotation, multi-stimulus comparisons, other illusions, adversarial prompts, multi-turn evaluation.       | Phase 1–3 infrastructure            | Extended trial sets, new analyses        |
-
----
-
-## Master Variable Metadata
-
-This is the single authoritative registry of every variable in the project. Each variable belongs to exactly one **table** and one **phase**. The `role` column indicates the variable's function within its table.
-
-### Trials table (`trials.csv`) — Phase 1: Stimulus Creation
-
-| # | variable              | type      | values                                             | description                                                                                      | role             |
-|---|-----------------------|-----------|----------------------------------------------------|--------------------------------------------------------------------------------------------------|------------------|
-| 1 | `trial_id`            | integer   | Auto-increment                                     | Unique identifier for the trial. Primary key.                                                    | Identity (PK)    |
-| 2 | `n_comparisons`       | integer   | `2` (fixed for now)                                | Number of test stimuli being compared. Fixed at 2 for current design; column exists for future extension to multi-way comparisons. | Design           |
-| 3 | `orientation`         | character | `"horizontal"`, `"vertical"`, `"diagonal"`         | Spatial arrangement of the two stimulus groups. Horizontal = left/right, vertical = top/bottom, diagonal = upper-left/lower-right. | Layout           |
-| 4 | `canvas_width`        | integer   | `{512, 768, 1024}`                                 | Image width in pixels. Varied to test resolution sensitivity.                                    | Layout           |
-| 5 | `canvas_height`       | integer   | `{512, 768, 1024}`                                 | Image height in pixels. Varied to test resolution sensitivity.                                   | Layout           |
-| 6 | `background_color`    | character | `{"#FFFFFF", "#000000"}`                           | Canvas background color (6-digit hex). Restricted to black and white to ensure shape visibility.  | Layout           |
-| 7 | `test_a_shape`        | character | `{"circle", "square"}`                             | Shape of test stimulus A. Position A = left / top / upper-left depending on orientation.         | Test stimulus    |
-| 8 | `test_a_size`         | numeric   | `(0, ∞)` ; typical `[0.5, 2.0]`                   | Size of test stimulus A in plot units. For circles: radius. For squares: half side-length.        | Test stimulus    |
-| 9 | `test_a_color`        | character | Color pool                                         | Border/stroke color of test stimulus A.                                                          | Test stimulus    |
-| 10| `test_a_fill`         | character | Color pool or `NA`                                 | Fill color of test stimulus A. `NA` means no fill (outline only).                                | Test stimulus    |
-| 11| `test_b_shape`        | character | `{"circle", "square"}`                             | Shape of test stimulus B. Position B = right / bottom / lower-right depending on orientation.    | Test stimulus    |
-| 12| `test_b_size`         | numeric   | `(0, ∞)` ; typical `[0.5, 2.0]`                   | Size of test stimulus B in plot units. Same convention as `test_a_size`.                          | Test stimulus    |
-| 13| `test_b_color`        | character | Color pool                                         | Border/stroke color of test stimulus B.                                                          | Test stimulus    |
-| 14| `test_b_fill`         | character | Color pool or `NA`                                 | Fill color of test stimulus B. `NA` means no fill.                                               | Test stimulus    |
-| 15| `surround_a_shape`    | character | `{"circle", "square"}`                             | Shape of surrounding (context) stimuli around test A.                                            | Context stimulus |
-| 16| `surround_a_size`     | numeric   | `(0, ∞)` ; typical `[0.3, 4.0]`                   | Size of each surrounding stimulus around A. Same size convention as test stimuli.                 | Context stimulus |
-| 17| `surround_a_n`        | integer   | `{0, 4, 5, 6, 7, 8}`                              | Number of surrounding stimuli around A. 0 = no surround (used in Tier 0 sanity checks).         | Context stimulus |
-| 18| `surround_a_color`    | character | Color pool                                         | Border/stroke color of surrounds around A.                                                       | Context stimulus |
-| 19| `surround_a_fill`     | character | Color pool or `NA`                                 | Fill color of surrounds around A.                                                                | Context stimulus |
-| 20| `surround_a_distance` | numeric   | `(0, ∞)` or `NA`                                  | Distance from center of test A to center of each surrounding shape. Controls spacing/crowding. `NA` when `surround_a_n == 0`. | Context stimulus |
-| 21| `surround_b_shape`    | character | `{"circle", "square"}`                             | Shape of surrounding stimuli around test B.                                                      | Context stimulus |
-| 22| `surround_b_size`     | numeric   | `(0, ∞)` ; typical `[0.3, 4.0]`                   | Size of each surrounding stimulus around B.                                                      | Context stimulus |
-| 23| `surround_b_n`        | integer   | `{0, 4, 5, 6, 7, 8}`                              | Number of surrounding stimuli around B. 0 = no surround.                                         | Context stimulus |
-| 24| `surround_b_color`    | character | Color pool                                         | Border/stroke color of surrounds around B.                                                       | Context stimulus |
-| 25| `surround_b_fill`     | character | Color pool or `NA`                                 | Fill color of surrounds around B.                                                                | Context stimulus |
-| 26| `surround_b_distance` | numeric   | `(0, ∞)` or `NA`                                  | Distance from center of test B to center of each surrounding shape. `NA` when `surround_b_n == 0`. | Context stimulus |
-| 27| `true_larger`         | character | `{"equal", "a", "b"}`                             | Ground truth: which test stimulus is truly larger. Computed by `verify_trial()`, never set manually. | Ground truth     |
-| 28| `true_diff_ratio`     | numeric   | `[0, 1)`                                          | Size difference ratio: `abs(a - b) / max(a, b)`. 0 when equal. Computed by `verify_trial()`. | Ground truth     |
-| 29| `tier`                | integer   | `{0, 1, 2, 3}` or `NA`                            | Difficulty tier assigned by `classify_tier()`. See Tier Definitions. `NA` for neutral/unclassifiable trials. | Ground truth     |
-| 30| `seed`                | integer   | Any integer or `NA`                                | RNG seed used to generate this trial's random parameters. `NA` if trial was manually constructed. Enables exact reproduction of random generation. | Reproducibility  |
-| 31| `file_format`         | character | `{"png", "svg", "webp"}`                          | Image file format for this trial's rendered stimulus.                                            | Rendering        |
-| 32| `file_path`           | character | Relative path, e.g. `"images/1_b_t3.png"`         | Path to the rendered stimulus image, relative to project root. Named `<id>_<true_larger>_t<tier>.<ext>`. | Rendering        |
-
-### Prompts table (`prompts.csv`) — Phase 2: Evaluation
-
-| # | variable                | type      | values                                             | description                                                                                      | role             |
-|---|-------------------------|-----------|----------------------------------------------------|--------------------------------------------------------------------------------------------------|------------------|
-| 1 | `prompt_id`             | integer   | Auto-increment                                     | Unique identifier for the prompt variant. Primary key.                                           | Identity (PK)    |
-| 2 | `system_prompt`         | character | Free text                                          | System-level instruction sent to the VLM. Sets persona and behavioral constraints.               | Prompt content   |
-| 3 | `user_prompt_template`  | character | Free text with `{}` placeholders                   | User prompt template. Placeholders like `{test_a_shape}` are filled per trial at evaluation time. | Prompt content   |
-| 4 | `response_format`       | character | `{"free_text", "forced_choice", "json"}`           | Expected response structure. Affects how the response parser extracts the answer.                 | Prompt design    |
-| 5 | `allows_unknown`        | logical   | `TRUE`, `FALSE`                                    | Whether "unknown" / "I don't know" is presented as a valid response option in the prompt.        | Prompt design    |
-| 6 | `description`           | character | Free text                                          | Human-readable label describing the prompt variant (e.g., "minimal forced-choice", "expert persona", "chain-of-thought"). | Metadata         |
-
-### Evaluations table (`evals.csv`) — Phase 2: Evaluation
-
-| # | variable                | type      | values                                                    | description                                                                                      | role             |
-|---|-------------------------|-----------|-----------------------------------------------------------|--------------------------------------------------------------------------------------------------|------------------|
-| 1 | `eval_id`               | integer   | Auto-increment                                            | Unique identifier for this evaluation. Primary key.                                              | Identity (PK)    |
-| 2 | `trial_id`              | integer   | FK → `trials.trial_id`                                    | Which trial (stimulus image) was evaluated.                                                      | Link (FK)        |
-| 3 | `prompt_id`             | integer   | FK → `prompts.prompt_id`                                  | Which prompt variant was used for this evaluation.                                               | Link (FK)        |
-| 4 | `provider`              | character | `{"anthropic", "openai", "google"}`                       | API provider used.                                                                               | Model config     |
-| 5 | `model`                 | character | Full model ID, e.g. `"claude-sonnet-4-20250514"`, `"gpt-4o"` | Specific model identifier as used in the API call.                                           | Model config     |
-| 6 | `model_version`         | character | Version string, e.g. `"4.5"`, `"4.6"`                    | Model version, if applicable. Allows tracking across model updates.                              | Model config     |
-| 7 | `temperature`           | numeric   | `[0, 2]`                                                  | Sampling temperature used for this evaluation.                                                   | Model config     |
-| 8 | `max_tokens`            | integer   | `> 0`                                                     | Maximum tokens allowed for the model response.                                                   | Model config     |
-| 9 | `response_larger`       | character | `{"equal", "a", "b", "unknown", "parse_error"}`          | Parsed model response. `"a"` or `"b"` maps from directional terms (left/right, top/bottom) based on orientation. `"parse_error"` if response could not be parsed. | Result           |
-| 10| `response_confidence`   | numeric   | `[0, 1]` or `NA`                                         | Model's self-reported confidence, if elicited by the prompt. `NA` if not requested or not parseable. | Result           |
-| 11| `raw_response`          | character | Full text                                                 | Complete raw model response, verbatim. Essential for debugging and post-hoc analysis.             | Result           |
-| 12| `latency_ms`            | integer   | `>= 0`                                                   | Time from API request to response, in milliseconds.                                              | Performance      |
-| 13| `timestamp`             | character | ISO 8601, e.g. `"2026-02-19T19:22:00Z"`                  | When this evaluation was executed.                                                               | Metadata         |
-| 14| `error`                 | character | `NA` or error text                                        | `NA` if the API call succeeded. Error message text if the call failed.                           | Metadata         |
-
-### Derived analysis columns — Phase 3: Analysis
-
-These columns are computed at analysis time by joining trials ↔ evals ↔ prompts. They are not stored in any CSV; they exist only in the analysis pipeline.
-
-| # | variable                | type      | values                    | description                                                                                      | derived_from                              |
-|---|-------------------------|-----------|---------------------------|--------------------------------------------------------------------------------------------------|-------------------------------------------|
-| 1 | `correct`               | logical   | `TRUE`, `FALSE`           | Whether the model's response matches ground truth: `response_larger == true_larger`.             | `evals.response_larger`, `trials.true_larger` |
-| 2 | `illusion_susceptible`  | logical   | `TRUE`, `FALSE`, `NA`     | On Tier 1 (equal-size) trials: `response_larger != "equal"`. `NA` for non-Tier-1 trials.        | `evals.response_larger`, `trials.tier`    |
-| 3 | `illusion_direction`    | character | `"a"`, `"b"`, `NA`       | On Tier 1 trials where `illusion_susceptible == TRUE`: which side the model chose as larger. Indicates directional illusion bias. `NA` otherwise. | `evals.response_larger`, `trials.tier`    |
-| 4 | `spatial_choice`        | character | `"a"`, `"b"`, `"equal"`, `"unknown"` | Same as `response_larger` but explicitly labelled for spatial bias analysis across all tiers. | `evals.response_larger`                   |
 
 ---
 
@@ -598,23 +551,23 @@ All steps complete and validated.
 
 ### Phase 2: Evaluation
 
-| step | task                                           | file                    | depends_on |
-|------|------------------------------------------------|-------------------------|------------|
-| 2.1  | Define prompt variants                         | `data/prompts.csv`      | —          |
-| 2.2  | Implement API wrapper with retry/rate-limiting | `R/evaluate.R`          | —          |
-| 2.3  | Implement response parser (extract structured answer from raw text, map directional terms to a/b) | `R/evaluate.R`          | —          |
-| 2.4  | Run evaluations across models × prompts × temperatures | —                       | 1.8, 2.1, 2.2, 2.3 |
-| 2.5  | Store results in `evals.csv`                   | `data/evals.csv`        | 2.4        |
+| step | task                                           | file                    | depends_on | status |
+|------|------------------------------------------------|-------------------------|------------|--------|
+| 2.1  | Define prompt variants                         | `data/prompts.csv`      | —          | ✓      |
+| 2.2  | Implement vitals-based evaluation pipeline (custom solver + scorer) | `R/evaluate.R` | — | ✓ |
+| 2.3  | Implement response parser (extract structured answer from raw text, map directional terms to a/b) | `R/evaluate.R` | — | ✓ |
+| 2.4  | Run evaluations across models × prompts        | —                       | 1.8, 2.1, 2.2, 2.3 | |
+| 2.5  | Review results in Inspect log viewer           | —                       | 2.4        |        |
 
 ### Phase 3: Analysis
 
-| step | task                                           | file                    | depends_on |
-|------|------------------------------------------------|-------------------------|------------|
-| 3.1  | Join trials ↔ evals ↔ prompts, compute derived columns | `R/analyze.R`          | 1.8, 2.5   |
-| 3.2  | Compute accuracy, bias, d-prime, illusion susceptibility metrics | `R/analyze.R`          | 3.1        |
-| 3.3  | Generate key plots (psychometric curves, confusion matrices, spatial bias, congruency effects) | `R/analyze.R`          | 3.1        |
-| 3.4  | Summary statistics and tables                  | `output/`               | 3.2        |
-| 3.5  | Package for open-source release (images + trials.csv + documentation) | —                       | 3.4        |
+| step | task                                           | file                    | depends_on | status |
+|------|------------------------------------------------|-------------------------|------------|--------|
+| 3.1  | Join trials ↔ evals ↔ prompts, compute derived columns | `R/analyze.R`  | 1.8, 2.5   | ✓      |
+| 3.2  | Compute accuracy, bias, d-prime, illusion susceptibility, confusion matrix metrics | `R/analyze.R` | 3.1 | ✓ |
+| 3.3  | Generate key plots (12 core + conditional)     | `R/analyze.R`           | 3.1        | ✓      |
+| 3.4  | Summary statistics and tables (14 CSVs)        | `output/`               | 3.2        | ✓      |
+| 3.5  | Package for open-source release (images + trials.csv + documentation) | —             | 3.4        |        |
 
 ### Phase 4: Extensions (future)
 

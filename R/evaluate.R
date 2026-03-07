@@ -40,7 +40,7 @@ library(purrr)
 source("R/strip_answer.R")
 
 # =============================================================================
-# Direction helpers (unchanged from original)
+# Direction helpers
 # =============================================================================
 
 DIRECTION_WORDS <- list(
@@ -71,7 +71,7 @@ fill_prompt <- function(template, trial) {
 }
 
 # =============================================================================
-# Response parser (unchanged from original)
+# Response parser
 # =============================================================================
 
 #' Extract a structured response_larger value from raw model text.
@@ -106,24 +106,29 @@ parse_response <- function(raw_response, orientation, response_format = "forced_
     }
   }
 
-  # Normalise: lowercase, strip punctuation (keep hyphens and spaces), take first word
+  # Normalise: lowercase, strip punctuation (keep hyphens and spaces), split words
   text_clean <- tolower(trimws(text))
   text_clean <- gsub("[^a-z -]", " ", text_clean)
   text_clean <- trimws(text_clean)
-  first_word <- strsplit(text_clean, "\\s+")[[1]][1]
+  words <- strsplit(text_clean, "\\s+")[[1]]
+  first_word <- words[1]
+  # For compound directions like "upper left" -> "upper-left"
+  first_two <- if (length(words) >= 2) paste(words[1:2], collapse = "-") else ""
 
   # Map to canonical answer
   if (is.na(first_word) || first_word == "") return("parse_error")
 
-  if (first_word == dirs$a || first_word == "a")    return("a")
-  if (first_word == dirs$b || first_word == "b")    return("b")
+  if (first_word == dirs$a || first_two == dirs$a || first_word == "a") return("a")
+  if (first_word == dirs$b || first_two == dirs$b || first_word == "b") return("b")
   if (first_word %in% c("equal", "same", "neither")) return("equal")
   if (first_word %in% c("unknown", "unsure", "unclear", "cannot", "can't", "not")) return("unknown")
 
-  # Fallback: scan full cleaned text for any direction word
+  # Fallback: scan full cleaned text for any direction word (try both hyphenated and spaced)
   full_clean <- tolower(gsub("[^a-z -]", " ", raw_response))
-  if (grepl(dirs$a, full_clean, fixed = TRUE)) return("a")
-  if (grepl(dirs$b, full_clean, fixed = TRUE)) return("b")
+  dir_a_pat <- paste0(gsub("-", "[ -]", dirs$a, fixed = TRUE))
+  dir_b_pat <- paste0(gsub("-", "[ -]", dirs$b, fixed = TRUE))
+  if (grepl(dir_a_pat, full_clean)) return("a")
+  if (grepl(dir_b_pat, full_clean)) return("b")
   if (grepl("equal|same|neither", full_clean))  return("equal")
   if (grepl("unknown|unsure|unclear",  full_clean)) return("unknown")
 
@@ -309,8 +314,8 @@ run_evals <- function(trials,
     mcfg <- models[[mi]]
     model_label <- paste0(mcfg$provider, "/", mcfg$model)
 
-    for (pi in seq_len(nrow(prompts))) {
-      prompt <- prompts[pi, ]
+    for (p_idx in seq_len(nrow(prompts))) {
+      prompt <- prompts[p_idx, ]
       task_name <- paste0(model_label, "__", prompt$description)
 
       message(sprintf("Creating task: %s", task_name))

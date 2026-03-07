@@ -59,23 +59,16 @@ generate_design <- function(
 
   trials <- do.call(rbind, trials_list)
 
+  # --- Shuffle row order (so tiers are interleaved, not blocked) ---
+  set.seed(seed + 1L)
+  trials <- trials[sample(nrow(trials)), ]
+
   # --- Assign trial_id and file_path ---
   # Naming convention: <trial_id>_<true_larger>_t<tier>.<ext>
   # e.g., "1_equal_t1.png", "2_a_t2.png", "3_b_t0.png"
   # This encodes ground truth and tier in the filename for researcher convenience.
   # IMPORTANT: Before sending images to AI models for evaluation, use
   # strip_answer_from_path() to produce a clean copy without the answer/tier.
-  trials$trial_id <- seq_len(nrow(trials))
-  tier_label <- ifelse(is.na(trials$tier), "tNA", paste0("t", trials$tier))
-  trials$file_path <- file.path(
-    image_dir,
-    paste0(trials$trial_id, "_", trials$true_larger, "_", tier_label, ".", trials$file_format)
-  )
-
-  # --- Shuffle row order (so tiers are interleaved, not blocked) ---
-  set.seed(seed + 1L)
-  trials <- trials[sample(nrow(trials)), ]
-  # Re-assign trial_id after shuffle to keep it sequential
   trials$trial_id <- seq_len(nrow(trials))
   tier_label <- ifelse(is.na(trials$tier), "tNA", paste0("t", trials$tier))
   trials$file_path <- file.path(
