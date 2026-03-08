@@ -277,6 +277,29 @@ run_evals(trials, prompts, models)
 
 ---
 
+## Dependencies & Requirements
+
+**R version:** 4.1.0 or later (uses the base pipe `|>`).
+
+| Package | Phase | Purpose |
+|---------|-------|---------|
+| `ggplot2` | 1, 3 | Stimulus rendering and analysis plots |
+| `ggforce` | 1 | Circle geometry for `draw_shape()` |
+| `vitals` | 2 | Evaluation framework (Task orchestration, logging) |
+| `ellmer` | 2 | LLM API interaction (OpenAI, Anthropic, Google, GitHub) |
+| `tibble` | 2 | Dataset construction for vitals |
+| `purrr` | 2 | Functional iteration in solver/scorer |
+| `dplyr` | 3 | Data wrangling in `analyze.R` |
+| `tidyr` | 3 | Data reshaping in `analyze.R` |
+
+**Phase 1 (stimulus creation)** requires only `ggplot2` and `ggforce`. These are the only dependencies needed to generate trial tables and render images.
+
+**Phase 2 (evaluation)** adds `vitals`, `ellmer`, `tibble`, and `purrr`. If `vitals`/`ellmer` are too heavy for your setup, a legacy CSV-based evaluation workflow is available in `R/legacy/evaluate.R` — it writes directly to `data/evals.csv` without the vitals framework.
+
+**Phase 3 (analysis)** adds `dplyr`, `tidyr`, and `ggplot2`. If Phase 2 was run via the legacy workflow, pass `evals_path = "data/evals.csv"` to `analyze_results()`.
+
+---
+
 ## Variable Naming Conventions
 
 - **Columns with `_a` / `_b` suffix:** Refer to stimulus positions A (left/top/upper-left) and B (right/bottom/lower-right).
