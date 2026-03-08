@@ -19,7 +19,6 @@ Or with pip:
 pip install -r py/pyproject.toml
 ```
 
-All scripts run from the project root (`Ebbinghaus/`), not from `py/`.
 
 ## Quick Start
 
