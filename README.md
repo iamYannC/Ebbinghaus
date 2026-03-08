@@ -147,10 +147,19 @@ Ebbinghaus/
 │   └── prompts.csv             # Prompt variants for evaluation
 ├── docs/
 │   └── reference_manual.pdf    # All internal functions and their arguments (roxygen-generated)
+├── py/                         # Python implementation (see py/README.md)
+│   ├── config/defaults.py      # Python config (mirrors R defaults)
+│   └── src/                    # All Python source modules
 ├── images/                     # Rendered stimulus images
 ├── images_eval/                # Answer-stripped copies (generated automatically)
 └── output/                     # Analysis outputs (plots, summary CSVs)
 ```
+
+---
+
+## Python Version
+
+A full Python port is available in the [`py/`](py/) directory, using `pandas`, `matplotlib`, and [Inspect AI](https://inspect.ai-safety-institute.org.uk/). Both versions write to the same shared directories (`images/`, `data/`, `output/`). See [`py/README.md`](py/README.md) for setup and usage.
 
 ---
 

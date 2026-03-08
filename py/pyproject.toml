@@ -1,0 +1,17 @@
+[project]
+name = "ebbinghaus-benchmark"
+version = "1.0.0"
+description = "Modular Ebbinghaus Benchmark for LLMs and Human Participants"
+requires-python = ">=3.11"
+license = "CC-BY-4.0"
+dependencies = [
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "seaborn",
+    "Pillow",
+    "inspect-ai",
+]
+
+[tool.uv]
+dev-dependencies = []

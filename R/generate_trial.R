@@ -388,6 +388,7 @@ generate_trial <- function(
     seed                = seed,
     file_format         = file_format,
     file_path           = NA_character_,
+    created_with        = "r",
     stringsAsFactors    = FALSE
   )
 
