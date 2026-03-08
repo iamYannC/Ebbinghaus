@@ -5,8 +5,7 @@
 .Ruserdata
 *.Rproj
 
-# Images (large binary files — share via trials.csv + render_stimuli())
-images/
+
 images_eval/
 
 # Output plots and tables (generated artifacts)
@@ -23,5 +22,6 @@ Thumbs.db
 # Development
 /Ebb-dev
 
-# QMD
+# artifacts
 *.qmd
+*.html
