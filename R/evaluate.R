@@ -26,8 +26,8 @@
 #     trials  = trials,
 #     prompts = prompts,
 #     models  = list(
-#       list(provider = "openai",    model = "gpt-4o"),
-#       list(provider = "anthropic", model = "claude-sonnet-4-20250514")
+#       list(provider = "openai",    model = "gpt-5.4-pro"),
+#       list(provider = "anthropic", model = "claude-sonnet-4-6")
 #     )
 #   )
 # =============================================================================
@@ -286,7 +286,7 @@ make_chat <- function(model_cfg, system_prompt) {
 #' @param prompts   Data frame from prompts.csv.
 #' @param models    List of named lists. Each must have `provider` and `model`;
 #'   optionally `temperature`, `max_tokens`. Example:
-#'   `list(provider = "openai", model = "gpt-4o")`.
+#'   `list(provider = "openai", model = "gpt-5.4-pro")`.
 #' @param image_dir Directory containing answer-stripped images. If the
 #'   directory doesn't exist, images will be stripped from `images/`.
 #' @param epochs    Number of times to repeat each sample (default 1).

@@ -10,7 +10,7 @@ source("config/defaults.R")
 source("R/generate_design.R")
 source("R/render_stimuli.R")
 
-trials <- generate_design(seed = 7042, n_per_tier = 50)
+trials <- generate_design(seed = 42, n_per_tier = 5)
 render_stimuli(trials)
 
 # Phase 2: Evaluate models
@@ -59,7 +59,9 @@ trials <- generate_design(seed = 42, n_per_tier = 5)
 render_stimuli(trials)
 ```
 
-This is the most basic use case: generate a balanced design with 50 trials per tier and render the images. To customize, edit `config/defaults.R` before generating (e.g., change shape pools, size ranges, canvas dimensions).
+This is the most basic use case: generate a balanced design with 5 trials per tier and render the images. To customize, edit `config/defaults.R` before generating (e.g., change shape pools, size ranges, canvas dimensions).
+
+![Example stimuli generated with defaults edited to only produce horizontal layouts, circle shapes, on a white background](docs/stimuli-example.png)
 
 The trial table can also be constructed by other means - filter an existing table, build one manually, or use any external tool. All downstream functions accept any data frame with the correct schema. See [`VARIABLE_REGISTRY.md`](VARIABLE_REGISTRY.md) for the full trials schema and configuration reference.
 
@@ -144,3 +146,11 @@ Ebbinghaus/
 ├── images_eval/                # Answer-stripped copies (generated automatically)
 └── output/                     # Analysis outputs (plots, summary CSVs)
 ```
+
+---
+
+## License & Citation
+
+This project is licensed under [Creative Commons Attribution 4.0](LICENSE.md), covering both the source code and any output it produces (stimulus images, trial tables, analysis results). You are free to use, download, and modify the code as you please with proper citation. See [`CITATION.cff`](CITATION.cff) for citation metadata, or use the "Cite this repository" button on GitHub.
+
+Visit my [website](https://iamyannc.github.io/Yann-dev) for contact information.
