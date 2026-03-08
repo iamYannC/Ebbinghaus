@@ -93,8 +93,14 @@ def compute_all_extents(trial: dict, positions: dict, padding: float = 0.05) -> 
 
 
 def _is_na(val) -> bool:
-    """Check if a value is NaN/None."""
+    """Check if a value is NaN/None/empty-string.
+
+    Empty strings arise from CSV round-trips where Python None is written
+    as an empty cell and read back as ''.
+    """
     if val is None:
+        return True
+    if isinstance(val, str) and val.strip() == "":
         return True
     try:
         return math.isnan(val)

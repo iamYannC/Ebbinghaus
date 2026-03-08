@@ -82,6 +82,8 @@ logs = run_evals(trials, prompts, models)
 
 Same seeds will **not** produce identical trial tables across R and Python due to different PRNG implementations. Reproducibility is within-language only.
 
+`master_seed` is always populated — if no seed was passed to `generate_design()`, the auto-generated seed is stored. Reproduce via: `generate_design(seed=int(trials["master_seed"].iloc[0]))`.
+
 ---
 
 **For the complete trial schema, prompt schema, and derived analysis variables, see the [root Variable Registry](../VARIABLE_REGISTRY.md).**

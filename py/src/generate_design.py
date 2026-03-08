@@ -71,6 +71,7 @@ def generate_design(
 
     # Assign trial_id and file_path
     trials["trial_id"] = range(1, len(trials) + 1)
+    trials["master_seed"] = seed
     tier_label = trials["tier"].apply(
         lambda t: "tNA" if pd.isna(t) else f"t{int(t)}"
     )

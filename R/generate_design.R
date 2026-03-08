@@ -70,6 +70,7 @@ generate_design <- function(
   # IMPORTANT: Before sending images to AI models for evaluation, use
   # strip_answer_from_path() to produce a clean copy without the answer/tier.
   trials$trial_id <- seq_len(nrow(trials))
+  trials$master_seed <- seed
   tier_label <- ifelse(is.na(trials$tier), "tNA", paste0("t", trials$tier))
   trials$file_path <- file.path(
     image_dir,

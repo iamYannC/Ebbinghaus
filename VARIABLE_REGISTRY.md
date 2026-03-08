@@ -48,6 +48,11 @@ This produces a `trials` data frame in memory and renders stimulus images to `im
 You can optionally persist the data frame to `data/trials.csv` for later use in Phase 2.
 If you do, load it in subsequent phases with `trials <- read.csv("data/trials.csv")`.
 
+Each row includes a `master_seed` column recording the seed passed to
+`generate_design()` (or the auto-generated seed if none was provided).
+This allows full reproduction of the design from the CSV alone:
+`generate_design(seed = unique(trials$master_seed))`.
+
 > **Tip:** To change the default parameter pools or ranges (e.g., add a new
 > shape, widen the size range), edit `config/defaults.R` before generating.
 

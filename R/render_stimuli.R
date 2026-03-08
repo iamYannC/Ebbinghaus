@@ -18,6 +18,15 @@ render_stimuli <- function(trials, verbose = TRUE) {
 
   stopifnot(is.data.frame(trials), nrow(trials) > 0)
 
+  # Coerce empty strings to NA in character columns.  Python-generated CSVs
+
+  # write None as empty cells, which read.csv() imports as "".
+  chr_cols <- vapply(trials, is.character, logical(1))
+  trials[chr_cols] <- lapply(trials[chr_cols], function(x) {
+    x[x == ""] <- NA_character_
+    x
+  })
+
   # Ensure output directories exist
   dirs <- unique(dirname(trials$file_path))
   for (d in dirs) {

@@ -232,10 +232,14 @@ generate_trial <- function(
     test_b_size     <- test_a_size
     surround_a_size <- runif(1, surround_size_range[1], surround_size_range[2]) * scale
     surround_a_size <- cap_surround_size(surround_a_size, surround_a_n, test_a_size, test_a_shape, surround_a_shape, half_budget)
-    repeat {
-      surround_b_size <- runif(1, surround_size_range[1], surround_size_range[2]) * scale
-      surround_b_size <- cap_surround_size(surround_b_size, surround_b_n, test_b_size, test_b_shape, surround_b_shape, half_budget)
-      if (abs(surround_a_size - surround_b_size) > FLOAT_TOLERANCE) break
+    surround_b_size <- runif(1, surround_size_range[1], surround_size_range[2]) * scale
+    surround_b_size <- cap_surround_size(surround_b_size, surround_b_n, test_b_size, test_b_shape, surround_b_shape, half_budget)
+    # When both sides are geometrically capped to the same value (e.g. both
+    # hit the SURROUND_SIZE_RANGE floor), no amount of re-drawing can
+    # produce different sizes.  Nudge one down to guarantee the
+    # surround-size asymmetry that Tier 1 requires.
+    if (abs(surround_a_size - surround_b_size) <= FLOAT_TOLERANCE) {
+      surround_b_size <- surround_a_size * 0.7
     }
 
   } else if (tier == 2L || tier == 3L) {
