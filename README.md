@@ -1,6 +1,6 @@
 # Ebbinghaus Illusion Benchmark
 
-A flexible R toolkit for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case - generate stimuli, send them to models, analyze results - while allowing full flexibility over every parameter. The **trial table is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
+A flexible R toolkit for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case - generate stimuli, send them to models, analyze results - while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
 
 ## Quick Start
 
@@ -63,7 +63,7 @@ This is the most basic use case: generate a balanced design with 5 trials per ti
 
 ![Example stimuli generated with defaults edited to only produce horizontal layouts, circle shapes, on a white background](docs/stimuli-example.png)
 
-The trial table can also be constructed by other means - filter an existing table, build one manually, or use any external tool. All downstream functions accept any data frame with the correct schema. See [`VARIABLE_REGISTRY.md`](VARIABLE_REGISTRY.md) for the full trials schema and configuration reference.
+The [trial table](data/trials.csv) can also be constructed by other means - filter an existing table, build one manually, or use any external tool. All downstream functions accept any data frame with the correct schema. See [`VARIABLE_REGISTRY.md`](VARIABLE_REGISTRY.md) for the full trials schema and configuration reference.
 
 ------------------------------------------------------------------------
 
