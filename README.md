@@ -2,6 +2,11 @@
 
 A flexible R toolkit for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case - generate stimuli, send them to models, analyze results - while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
 
+
+[![DOI](https://zenodo.org/badge/1175680688.svg)](https://doi.org/10.5281/zenodo.18906801)
+
+
+
 ## Quick Start
 
 ``` r
