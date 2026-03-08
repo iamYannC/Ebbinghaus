@@ -28,7 +28,7 @@ import sys; sys.path.insert(0, "py")
 from src.generate_design import generate_design
 from src.render_stimuli import render_stimuli
 
-trials = generate_design(seed=7042, n_per_tier=50)
+trials = generate_design(seed=422, n_per_tier=5)
 render_stimuli(trials)
 trials.to_csv("data/trials.csv", index=False)
 
