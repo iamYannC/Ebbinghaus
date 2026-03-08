@@ -24,8 +24,9 @@ All `source()` calls and file paths are relative to the project root (`Ebbinghau
 | `R/evaluate.R` | Phase 2 — vitals-based evaluation (custom solver/scorer/orchestrator) |
 | `R/analyze.R` | Phase 3 — joins data, computes 14 metrics (accuracy, d-prime, confusion, etc.), generates 12+ plots |
 | `R/strip_answer.R` | Strips ground truth from image filenames for evaluation |
-| `SPECIFICATION.md` | Complete design spec |
+| `README.md` | Project overview, tier definitions, usage examples |
 | `VARIABLE_REGISTRY.md` | All variables, schemas, phase I/O, combinatorics |
+| `docs/reference_manual.pdf` | Roxygen-generated PDF reference for all functions |
 
 ## Phase I/O
 
@@ -55,6 +56,18 @@ All `source()` calls and file paths are relative to the project root (`Ebbinghau
 ## Dependencies
 
 Phase 2 requires the `vitals` package (CRAN v0.2.0+) and `ellmer` for LLM interaction. Evaluation logs are written to the vitals log directory (set via `VITALS_LOG_DIR` env var or `vitals_log_dir_set()`). Use `vitals_view()` or the Inspect log viewer to browse results.
+
+## Regenerating the PDF reference manual
+
+When asked to regenerate `docs/reference_manual.pdf`, follow this exact procedure and overwrite existing contents in `docs/`:
+
+1. Create a temp package directory with `R/`, `man/`, a minimal `DESCRIPTION`, and a stub `NAMESPACE`.
+2. Copy all `R/*.R` files (excluding `R/legacy/`) into the temp package's `R/` dir, stripping any `library()`, `source()`, and `require()` lines.
+3. Run `roxygen2::roxygenise()` on the temp package to generate `.Rd` files.
+4. Add TinyTeX to PATH: `Sys.setenv(PATH = paste(file.path(tinytex::tinytex_root(), "bin", "windows"), Sys.getenv("PATH"), sep = ";"))`.
+5. Run `R CMD Rd2pdf` from within R via `system2(file.path(R.home("bin"), "R"), ...)` with flags `--no-preview --force --no-clean --output=docs/reference_manual.pdf`.
+6. If it fails at `makeindex`, find the `Rd2.pdf` in the `.Rd2pdf*` build directory under the project root and copy it to `docs/reference_manual.pdf`.
+7. Clean up `.Rd2pdf*` directories and the temp package.
 
 ## Dev notes
 
