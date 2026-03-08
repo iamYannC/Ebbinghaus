@@ -27,17 +27,17 @@ from src.verify_trial import verify_trial
 from src.classify_tier import classify_tier
 
 
-def pick_contrasting_color(pool: list[str], bg: str) -> str:
+def pick_contrasting_color(rng, pool: list[str], bg: str) -> str:
     """Pick a color from a pool, ensuring contrast against background."""
     candidates = [c for c in pool if c is not None and c != bg]
     if not candidates:
         raise ValueError(f"No colors in pool contrast with background '{bg}'")
-    return candidates[np.random.randint(len(candidates))]
+    return candidates[rng.randint(len(candidates))]
 
 
-def pick_fill(pool: list) -> str | None:
+def pick_fill(rng, pool: list) -> str | None:
     """Pick a fill color (may be None for transparent)."""
-    return pool[np.random.randint(len(pool))]
+    return pool[rng.randint(len(pool))]
 
 
 def min_distance_no_surround_overlap(
@@ -103,7 +103,7 @@ def generate_trial(
 
     # --- Seed handling ---
     if seed is None:
-        seed = int(rng.randint(-1_000_000_000, 1_000_000_000))
+        seed = int(rng.randint(0, 2_000_000_000))
     rng = np.random.RandomState(seed)
 
     # --- Orientation ---
@@ -124,22 +124,22 @@ def generate_trial(
     # --- Test stimuli ---
     test_a_shape = shape_pool[rng.randint(len(shape_pool))]
     test_a_size = rng.uniform(size_range[0], size_range[1]) * scale
-    test_a_color = pick_contrasting_color(color_pool, bg_color)
-    test_a_fill = pick_fill(fill_pool)
+    test_a_color = pick_contrasting_color(rng, color_pool, bg_color)
+    test_a_fill = pick_fill(rng, fill_pool)
 
     test_b_shape = shape_pool[rng.randint(len(shape_pool))]
-    test_b_color = pick_contrasting_color(color_pool, bg_color)
-    test_b_fill = pick_fill(fill_pool)
+    test_b_color = pick_contrasting_color(rng, color_pool, bg_color)
+    test_b_fill = pick_fill(rng, fill_pool)
 
     # --- Surround base parameters ---
     surround_a_shape = shape_pool[rng.randint(len(shape_pool))]
-    surround_a_color = pick_contrasting_color(color_pool, bg_color)
-    surround_a_fill = pick_fill(fill_pool)
+    surround_a_color = pick_contrasting_color(rng, color_pool, bg_color)
+    surround_a_fill = pick_fill(rng, fill_pool)
     surround_a_n = rng.randint(surround_n_range[0], surround_n_range[1] + 1)
 
     surround_b_shape = shape_pool[rng.randint(len(shape_pool))]
-    surround_b_color = pick_contrasting_color(color_pool, bg_color)
-    surround_b_fill = pick_fill(fill_pool)
+    surround_b_color = pick_contrasting_color(rng, color_pool, bg_color)
+    surround_b_fill = pick_fill(rng, fill_pool)
     surround_b_n = rng.randint(surround_n_range[0], surround_n_range[1] + 1)
 
     # --- Cap surround size helper ---

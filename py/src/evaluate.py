@@ -35,11 +35,6 @@ Usage:
 import os
 import re
 import pandas as pd
-from inspect_ai import Task, eval as inspect_eval
-from inspect_ai.dataset import Sample, MemoryDataset
-from inspect_ai.model import ChatMessageUser, ContentImage, ContentText, get_model
-from inspect_ai.scorer import Score, scorer, Target, CORRECT, INCORRECT
-from inspect_ai.solver import Generate, TaskState, solver
 
 from src.strip_answer import strip_answer_from_images
 
@@ -142,11 +137,14 @@ def parse_response(
 
 def build_dataset(
     trials: pd.DataFrame, prompt: pd.Series, image_dir: str = "images_eval"
-) -> list[Sample]:
+) -> list:
     """Build Inspect AI samples from trials and a single prompt variant.
 
     Each Sample represents one (trial, prompt) pair.
     """
+    from inspect_ai.dataset import Sample
+    from inspect_ai.model import ChatMessageUser, ContentImage, ContentText
+
     samples = []
     for i in range(len(trials)):
         row = trials.iloc[i]
@@ -179,38 +177,49 @@ def build_dataset(
 # Custom solver
 # =============================================================================
 
-@solver
 def ebbinghaus_solver():
     """Solver that passes through the image + text to the model."""
-    async def solve(state: TaskState, generate: Generate) -> TaskState:
-        return await generate(state)
-    return solve
+    from inspect_ai.solver import Generate, TaskState, solver
+
+    @solver
+    def _solver():
+        async def solve(state: TaskState, generate: Generate) -> TaskState:
+            return await generate(state)
+        return solve
+
+    return _solver()
 
 
 # =============================================================================
 # Custom scorer
 # =============================================================================
 
-@scorer(metrics=["accuracy"])
 def ebbinghaus_scorer():
     """Score Ebbinghaus evaluation results using deterministic parsing."""
-    async def score(state: TaskState, target: Target) -> Score:
-        raw = state.output.completion
-        orientation = state.metadata.get("orientation", "horizontal")
-        response_format = state.metadata.get("response_format", "forced_choice")
+    from inspect_ai.scorer import Score, scorer, Target, CORRECT, INCORRECT
+    from inspect_ai.solver import TaskState
 
-        parsed = parse_response(raw, orientation, response_format)
-        correct = parsed == target.text
+    @scorer(metrics=["accuracy"])
+    def _scorer():
+        async def score(state: TaskState, target: Target) -> Score:
+            raw = state.output.completion
+            orientation = state.metadata.get("orientation", "horizontal")
+            response_format = state.metadata.get("response_format", "forced_choice")
 
-        return Score(
-            value=CORRECT if correct else INCORRECT,
-            answer=parsed,
-            metadata={
-                "parsed_response": parsed,
-                "correct": correct,
-            },
-        )
-    return score
+            parsed = parse_response(raw, orientation, response_format)
+            correct = parsed == target.text
+
+            return Score(
+                value=CORRECT if correct else INCORRECT,
+                answer=parsed,
+                metadata={
+                    "parsed_response": parsed,
+                    "correct": correct,
+                },
+            )
+        return score
+
+    return _scorer()
 
 
 # =============================================================================
@@ -244,6 +253,10 @@ def run_evals(
     if not os.path.isdir(image_dir) or not os.listdir(image_dir):
         print("Stripping answers from images...")
         strip_answer_from_images(trials, image_dir)
+
+    from inspect_ai import Task, eval as inspect_eval
+    from inspect_ai.dataset import MemoryDataset
+    from inspect_ai.model import get_model
 
     all_logs = []
 

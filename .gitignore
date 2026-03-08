@@ -5,7 +5,17 @@
 .Ruserdata
 *.Rproj
 
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+.uv/
 
+# Evaluation artifacts (generated, not source)
 images_eval/
 
 # Output plots and tables (generated artifacts)
@@ -22,7 +32,7 @@ Thumbs.db
 # Development
 /Ebb-dev
 
-# artifacts
+# Artifacts
 *.qmd
 *.html
 .positai/

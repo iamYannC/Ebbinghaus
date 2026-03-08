@@ -41,12 +41,12 @@ def generate_design(
     rng = np.random.RandomState()
 
     if seed is None:
-        seed = int(rng.randint(-1_000_000_000, 1_000_000_000))
+        seed = int(rng.randint(0, 2_000_000_000))
         print(f"Using auto-generated master seed: {seed}")
     rng = np.random.RandomState(seed)
 
     total_trials = n_per_tier * 4
-    trial_seeds = rng.randint(-1_000_000_000, 1_000_000_000, size=total_trials)
+    trial_seeds = rng.randint(0, 2_000_000_000, size=total_trials)
 
     # Stratified by tier
     tiers = []

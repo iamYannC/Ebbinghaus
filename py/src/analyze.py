@@ -256,6 +256,18 @@ def analyze_results(
         totals = spatial_bias.groupby("model_label")["n"].transform("sum")
         spatial_bias["prop"] = spatial_bias["n"] / totals
 
+    # Spatial bias by orientation
+    spatial_bias_by_orientation = pd.DataFrame()
+    if len(ab_data) > 0 and "orientation" in ab_data.columns:
+        spatial_bias_by_orientation = (
+            ab_data.groupby(["model_label", "orientation", "parsed_response"])
+            .size().reset_index(name="n")
+        )
+        totals = spatial_bias_by_orientation.groupby(
+            ["model_label", "orientation"]
+        )["n"].transform("sum")
+        spatial_bias_by_orientation["prop"] = spatial_bias_by_orientation["n"] / totals
+
     congruency = valid[valid["tier"].isin([2, 3])]
     congruency_effect = pd.DataFrame()
     if len(congruency) > 0:
@@ -281,6 +293,38 @@ def analyze_results(
 
     dprime = compute_dprime(data)
 
+    # Conditional metrics
+    temperature_effect = pd.DataFrame()
+    if "temperature" in data.columns and data["temperature"].nunique() > 1:
+        temperature_effect = (
+            valid.groupby(["model_label", "temperature"])
+            .agg(n=("correct", "count"), accuracy=("correct", "mean"))
+            .reset_index()
+        )
+
+    format_effect = pd.DataFrame()
+    if "file_format" in data.columns and data["file_format"].nunique() > 1:
+        format_effect = (
+            valid.groupby(["model_label", "file_format"])
+            .agg(n=("correct", "count"), accuracy=("correct", "mean"))
+            .reset_index()
+        )
+
+    confidence_calibration = pd.DataFrame()
+    if "response_confidence" in data.columns and data["response_confidence"].notna().any():
+        conf_data = valid[valid["response_confidence"].notna()].copy()
+        conf_data["conf_bin"] = pd.cut(
+            conf_data["response_confidence"],
+            bins=[0, 0.25, 0.50, 0.75, 1.0],
+            labels=["0-25%", "25-50%", "50-75%", "75-100%"],
+            include_lowest=True,
+        )
+        confidence_calibration = (
+            conf_data.groupby(["model_label", "conf_bin"], observed=True)
+            .agg(n=("correct", "count"), accuracy=("correct", "mean"))
+            .reset_index()
+        )
+
     metrics = {
         "accuracy_by_model": accuracy_by_model,
         "accuracy_by_model_tier": accuracy_by_model_tier,
@@ -289,9 +333,13 @@ def analyze_results(
         "illusion_susceptibility": illusion_susceptibility_rate,
         "illusion_direction": illusion_direction_rate,
         "spatial_bias": spatial_bias,
+        "spatial_bias_by_orientation": spatial_bias_by_orientation,
         "congruency_effect": congruency_effect,
         "confusion": confusion,
         "dprime": dprime,
+        "temperature_effect": temperature_effect,
+        "format_effect": format_effect,
+        "confidence_calibration": confidence_calibration,
     }
 
     # =========================================================================
@@ -397,6 +445,146 @@ def analyze_results(
         ax.set_xlabel("d'")
         ax.set_title("d-prime (Perceptual Sensitivity)")
         plots["dprime"] = fig
+
+    # 7. Illusion direction
+    if len(illusion_direction_rate) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        models_list = illusion_direction_rate["model_label"].unique()
+        dirs = illusion_direction_rate["illusion_direction"].unique()
+        x = np.arange(len(models_list))
+        width = 0.8 / max(len(dirs), 1)
+        for j, d in enumerate(dirs):
+            sub = illusion_direction_rate[illusion_direction_rate["illusion_direction"] == d]
+            vals = [sub[sub["model_label"] == m]["prop"].values[0]
+                    if m in sub["model_label"].values else 0 for m in models_list]
+            bars = ax.bar(x + j * width, vals, width, label=d)
+            for bar, v in zip(bars, vals):
+                if v > 0:
+                    ax.text(bar.get_x() + bar.get_width() / 2, v + 0.01,
+                            f"{v:.2f}", ha="center", va="bottom", fontsize=8)
+        ax.set_xticks(x + width * (len(dirs) - 1) / 2)
+        ax.set_xticklabels(models_list, rotation=45, ha="right")
+        ax.set_ylabel("Proportion")
+        ax.set_title("Illusion Direction (Tier 1: Which Side Does the Model Favor?)")
+        ax.legend(title="Chose")
+        plots["illusion_direction"] = fig
+
+    # 8. Spatial bias
+    if len(spatial_bias) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        models_list = spatial_bias["model_label"].unique()
+        responses = spatial_bias["parsed_response"].unique()
+        x = np.arange(len(models_list))
+        width = 0.8 / max(len(responses), 1)
+        for j, r in enumerate(responses):
+            sub = spatial_bias[spatial_bias["parsed_response"] == r]
+            vals = [sub[sub["model_label"] == m]["prop"].values[0]
+                    if m in sub["model_label"].values else 0 for m in models_list]
+            bars = ax.bar(x + j * width, vals, width, label=r)
+            for bar, v in zip(bars, vals):
+                if v > 0:
+                    ax.text(bar.get_x() + bar.get_width() / 2, v + 0.01,
+                            f"{v:.2f}", ha="center", va="bottom", fontsize=8)
+        ax.set_xticks(x + width * (len(responses) - 1) / 2)
+        ax.set_xticklabels(models_list, rotation=45, ha="right")
+        ax.set_ylabel("Proportion")
+        ax.set_title("Spatial Bias: Preference for A vs B")
+        ax.legend(title="Response")
+        plots["spatial_bias"] = fig
+
+    # 9. Prompt comparison
+    if len(accuracy_by_prompt) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        prompts_list = accuracy_by_prompt["prompt_description"].unique()
+        models_list = accuracy_by_prompt["model_label"].unique()
+        x = np.arange(len(prompts_list))
+        width = 0.8 / max(len(models_list), 1)
+        for j, m in enumerate(models_list):
+            sub = accuracy_by_prompt[accuracy_by_prompt["model_label"] == m]
+            vals = [sub[sub["prompt_description"] == p]["accuracy"].values[0]
+                    if p in sub["prompt_description"].values else 0 for p in prompts_list]
+            bars = ax.bar(x + j * width, vals, width, label=m)
+            for bar, v in zip(bars, vals):
+                if v > 0:
+                    ax.text(bar.get_x() + bar.get_width() / 2, v + 0.01,
+                            f"{v:.2f}", ha="center", va="bottom", fontsize=8)
+        ax.set_xticks(x + width * (len(models_list) - 1) / 2)
+        ax.set_xticklabels(prompts_list, rotation=45, ha="right")
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("Accuracy")
+        ax.set_title("Accuracy by Prompt Variant")
+        ax.legend(title="Model")
+        plots["prompt_comparison"] = fig
+
+    # 10. Congruency effect
+    if len(congruency_effect) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ordered = congruency_effect.sort_values("congruency_effect")
+        ax.bar(ordered["model_label"], ordered["congruency_effect"])
+        ax.axhline(y=0, linestyle="--", color="gray", alpha=0.5)
+        for i, (_, row) in enumerate(ordered.iterrows()):
+            ax.text(i, row["congruency_effect"] + 0.01,
+                    f"{row['congruency_effect']:.2f}", ha="center", va="bottom", fontsize=8)
+        ax.set_ylabel("Effect Size")
+        ax.set_title("Congruency Effect (Tier 3 − Tier 2 Accuracy)")
+        ax.tick_params(axis="x", rotation=45)
+        plots["congruency_effect"] = fig
+
+    # 11. Temperature effect (conditional)
+    if len(temperature_effect) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        models_list = temperature_effect["model_label"].unique()
+        temps = sorted(temperature_effect["temperature"].unique())
+        x = np.arange(len(temps))
+        width = 0.8 / max(len(models_list), 1)
+        for j, m in enumerate(models_list):
+            sub = temperature_effect[temperature_effect["model_label"] == m]
+            vals = [sub[sub["temperature"] == t]["accuracy"].values[0]
+                    if t in sub["temperature"].values else 0 for t in temps]
+            ax.bar(x + j * width, vals, width, label=m)
+        ax.set_xticks(x + width * (len(models_list) - 1) / 2)
+        ax.set_xticklabels([str(t) for t in temps])
+        ax.set_ylim(0, 1)
+        ax.set_xlabel("Temperature")
+        ax.set_ylabel("Accuracy")
+        ax.set_title("Accuracy by Temperature")
+        ax.legend(title="Model")
+        plots["temperature_effect"] = fig
+
+    # 12. Format effect (conditional)
+    if len(format_effect) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        models_list = format_effect["model_label"].unique()
+        fmts = format_effect["file_format"].unique()
+        x = np.arange(len(fmts))
+        width = 0.8 / max(len(models_list), 1)
+        for j, m in enumerate(models_list):
+            sub = format_effect[format_effect["model_label"] == m]
+            vals = [sub[sub["file_format"] == f]["accuracy"].values[0]
+                    if f in sub["file_format"].values else 0 for f in fmts]
+            ax.bar(x + j * width, vals, width, label=m)
+        ax.set_xticks(x + width * (len(models_list) - 1) / 2)
+        ax.set_xticklabels(fmts)
+        ax.set_ylim(0, 1)
+        ax.set_xlabel("Format")
+        ax.set_ylabel("Accuracy")
+        ax.set_title("Accuracy by File Format")
+        ax.legend(title="Model")
+        plots["format_effect"] = fig
+
+    # 13. Confidence calibration (conditional)
+    if len(confidence_calibration) > 0:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        for m in confidence_calibration["model_label"].unique():
+            sub = confidence_calibration[confidence_calibration["model_label"] == m]
+            ax.plot(sub["conf_bin"], sub["accuracy"], marker="o", label=m)
+        ax.plot([0, 3], [0.125, 0.875], linestyle="--", alpha=0.3, color="gray")
+        ax.set_ylim(0, 1)
+        ax.set_xlabel("Reported Confidence")
+        ax.set_ylabel("Actual Accuracy")
+        ax.set_title("Confidence Calibration")
+        ax.legend(title="Model")
+        plots["confidence_calibration"] = fig
 
     # =========================================================================
     # Save outputs

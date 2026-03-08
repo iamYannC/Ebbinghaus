@@ -4,7 +4,7 @@ Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Uses
 
 ## Setup
 
-Requires Python 3.11+. Install with [uv](https://docs.astral.sh/uv/):
+Requires Python 3.11+. Install dependencies with [uv](https://docs.astral.sh/uv/):
 
 ```bash
 cd py
@@ -14,14 +14,15 @@ uv sync
 Or with pip:
 
 ```bash
-cd py
-pip install -e .
+pip install -r py/pyproject.toml
 ```
+
+All scripts run from the project root (`Ebbinghaus/`), not from `py/`.
 
 ## Quick Start
 
 ```python
-import sys; sys.path.insert(0, ".")
+import sys; sys.path.insert(0, "py")
 
 # Phase 1: Generate stimuli
 from src.generate_design import generate_design
@@ -49,10 +50,10 @@ results = analyze_results(logs=logs)
 
 | | |
 |---|---|
-| **Input** | `config/defaults.py` (parameter pools, size ranges, color palettes) |
+| **Input** | [`py/config/defaults.py`](config/defaults.py) (parameter pools, size ranges, color palettes) |
 | **Output** | `pandas.DataFrame` + rendered images in `images/` |
 
-Edit `config/defaults.py` to customize shapes, sizes, orientations, colors, etc. All defaults mirror the R version.
+Edit [`py/config/defaults.py`](config/defaults.py) to customize shapes, sizes, orientations, colors, etc. All defaults mirror the R version.
 
 ## Phase 2: Evaluation
 
@@ -99,4 +100,4 @@ py/
 │   └── analyze.py              # Metrics and plots
 ```
 
-See the [root README](../README.md) for tier definitions and project overview, and `VARIABLE_REGISTRY.md` for the Python-specific variable reference.
+See the [root README](../README.md) for tier definitions and project overview, and the [Python Variable Registry](VARIABLE_REGISTRY.md) for the Python-specific variable reference.

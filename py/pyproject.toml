@@ -9,9 +9,10 @@ dependencies = [
     "numpy",
     "matplotlib",
     "seaborn",
+    "scipy",
     "Pillow",
     "inspect-ai",
 ]
 
-[tool.uv]
-dev-dependencies = []
+[dependency-groups]
+dev = []

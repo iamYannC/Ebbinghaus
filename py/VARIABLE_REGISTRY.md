@@ -1,6 +1,6 @@
 # Variable Registry — Python
 
-Python-specific variable reference for the Ebbinghaus Benchmark. For tier definitions, project overview, and the shared trial/prompt schemas, see the [root README](../README.md) and [R VARIABLE_REGISTRY](../VARIABLE_REGISTRY.md).
+Python-specific variable reference for the Ebbinghaus Benchmark. For tier definitions, project overview, and the shared trial/prompt schemas, see the [root README](../README.md) and [root Variable Registry](../VARIABLE_REGISTRY.md).
 
 This document covers Python-specific function signatures, types, and Inspect AI concepts.
 
@@ -8,7 +8,7 @@ This document covers Python-specific function signatures, types, and Inspect AI 
 
 ## Configuration — `config/defaults.py`
 
-Edit `config/defaults.py` to control what `generate_design()` and `generate_trial()` produce. All parameters mirror the R version. Each variable is documented with inline comments.
+Edit [`py/config/defaults.py`](config/defaults.py) to control what `generate_design()` and `generate_trial()` produce. All parameters mirror the R version. Each variable is documented with inline comments.
 
 ---
 
@@ -84,4 +84,4 @@ Same seeds will **not** produce identical trial tables across R and Python due t
 
 ---
 
-**For the complete trial schema, prompt schema, and derived analysis variables, see the [root VARIABLE_REGISTRY](../VARIABLE_REGISTRY.md).**
+**For the complete trial schema, prompt schema, and derived analysis variables, see the [root Variable Registry](../VARIABLE_REGISTRY.md).**

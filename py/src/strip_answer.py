@@ -25,7 +25,7 @@ def strip_answer_from_path(path: str) -> str:
         Cleaned path in the format <id>.<ext>
     """
     return re.sub(
-        r"^(.+/\d+)_(equal|a|b)(_t[0-9NA]+)?(\.[a-z]+)$",
+        r"^(.+[/\\]\d+)_(equal|a|b)(_t[0-9NA]+)?(\.[a-z]+)$",
         r"\1\4",
         path,
     )
