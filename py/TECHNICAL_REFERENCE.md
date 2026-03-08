@@ -1,8 +1,34 @@
-# Variable Registry — Python
+# Technical Reference — Python
 
-Python-specific variable reference for the Ebbinghaus Benchmark. For tier definitions, project overview, and the shared trial/prompt schemas, see the [root README](../README.md) and [root Variable Registry](../VARIABLE_REGISTRY.md).
+Python-specific technical reference for the Ebbinghaus Benchmark. For tier definitions, project overview, and the shared trial/prompt schemas, see the [root README](../README.md) and [root Technical Reference](../TECHNICAL_REFERENCE.md).
 
 This document covers Python-specific function signatures, types, and Inspect AI concepts.
+
+---
+
+## Module Structure
+
+```
+py/
+├── config/
+│   └── defaults.py                 # Configurable parameters (mirrors R defaults)
+├── src/
+│   ├── generate_design.py          # Phase 1 — Build a complete design matrix
+│   ├── generate_trial.py           # Generate a single trial's parameters
+│   ├── render_stimuli.py           # Phase 1 — Batch render trial table to images
+│   ├── draw_trial.py               # Compose full stimulus image (matplotlib)
+│   ├── draw_shape.py               # Atomic shape drawing (matplotlib patches)
+│   ├── verify_trial.py             # Compute ground truth from size parameters
+│   ├── classify_tier.py            # Assign difficulty tier (0–3)
+│   ├── strip_answer.py             # Strip ground truth from filenames for evaluation
+│   ├── evaluate.py                 # Phase 2 — Inspect AI evaluation pipeline
+│   └── analyze.py                  # Phase 3 — Metrics and plots
+├── pyproject.toml                  # Dependencies (uv / pip)
+├── README.md
+└── TECHNICAL_REFERENCE.md          # This file
+```
+
+Shared directories (`data/`, `images/`, `output/`) live at the project root and are used by both R and Python. See the [root Technical Reference](../TECHNICAL_REFERENCE.md) for the full project tree.
 
 ---
 
@@ -86,4 +112,4 @@ Same seeds will **not** produce identical trial tables across R and Python due t
 
 ---
 
-**For the complete trial schema, prompt schema, and derived analysis variables, see the [root Variable Registry](../VARIABLE_REGISTRY.md).**
+**For the complete trial schema, prompt schema, and derived analysis variables, see the [root Technical Reference](../TECHNICAL_REFERENCE.md).**

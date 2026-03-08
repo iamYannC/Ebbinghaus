@@ -1,6 +1,6 @@
 # Ebbinghaus Illusion Benchmark <img src="docs/hex.png" alt="Ebbinghause hex logo" align="right" height="150"/>
 
-A flexible R toolkit for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case - generate stimuli, send them to models, analyze results - while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
+A flexible ~~R toolkit~~ (Now also for [Python users!](py/README.md)) for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case - generate stimuli, send them to models, analyze results - while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
 
 
 [![DOI](https://zenodo.org/badge/1175680688.svg)](https://doi.org/10.5281/zenodo.18906801)
@@ -16,6 +16,7 @@ source("R/generate_design.R")
 source("R/render_stimuli.R")
 
 trials <- generate_design(seed = 42, n_per_tier = 5)
+write.csv(trials, "data/trials.csv", row.names = FALSE) # optional, but not necessary for this workflow
 render_stimuli(trials)
 
 # Phase 2: Evaluate models
@@ -68,7 +69,7 @@ This is the most basic use case: generate a balanced design with 5 trials per ti
 
 ![Example stimuli generated with defaults edited to only produce horizontal layouts, circle shapes, on a white background](docs/stimuli-example.png)
 
-The [trial table](data/trials.csv) can also be constructed by other means - filter an existing table, build one manually, or use any external tool. All downstream functions accept any data frame with the correct schema. See [`VARIABLE_REGISTRY.md`](VARIABLE_REGISTRY.md) for the full trials schema and configuration reference.
+The [trial table](data/trials.csv) can also be constructed by other means - filter an existing table, build one manually, or use any external tool. All downstream functions accept any data frame with the correct schema. See [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md) for the full trials schema and configuration reference.
 
 ------------------------------------------------------------------------
 
@@ -99,7 +100,7 @@ tasks <- run_evals(trials, prompts, models)
 
 Each (prompt, model) combination creates one vitals Task. Images are automatically stripped of ground-truth labels before sending. Prompt templates support placeholders (`{direction_a}`, `{direction_b}`, `{test_a_shape}`, `{test_b_shape}`) that are filled per trial based on orientation.
 
-See [`VARIABLE_REGISTRY.md`](VARIABLE_REGISTRY.md) for the prompts schema and model configuration options.
+See [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md) for the prompts schema and model configuration options.
 
 > **Lightweight alternative:** If you prefer not to depend on `vitals` and `ellmer`, a legacy CSV-based evaluation workflow is available in `R/legacy/evaluate.R`. It writes results directly to `data/evals.csv` without the vitals framework.
 
@@ -119,47 +120,43 @@ source("R/analyze.R")
 results <- analyze_results(tasks = tasks)
 ```
 
-Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more. See [`VARIABLE_REGISTRY.md`](VARIABLE_REGISTRY.md) for the full list of metrics and generated plots.
+Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more. See [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md) for the full list of metrics and generated plots.
 
 ------------------------------------------------------------------------
 
 ## File Structure
 
-```         
-Ebbinghaus/
-├── config/
-│   └── defaults.R              # Configurable parameters (shapes, sizes, colors, etc.)
-├── R/
-│   ├── draw_shape.R            # Atomic shape drawing
-│   ├── draw_trial.R            # Compose full stimulus image from trial parameters
-│   ├── verify_trial.R          # Compute ground truth from size parameters
-│   ├── classify_tier.R         # Assign difficulty tier
-│   ├── generate_trial.R        # Generate a single trial's parameters
-│   ├── generate_design.R       # Build a complete design matrix
-│   ├── render_stimuli.R        # Batch render trial table to images
-│   ├── strip_answer.R          # Strip ground truth from filenames for evaluation
-│   ├── evaluate.R              # vitals-based evaluation pipeline (Phase 2)
-│   ├── analyze.R               # Metrics and plots (Phase 3)
-│   └── legacy/
-│       └── evaluate.R          # Pre-vitals evaluation (CSV-based, for reference)
-├── data/
-│   ├── trials.csv              # Trial metadata (generated or manual)
-│   └── prompts.csv             # Prompt variants for evaluation
-├── docs/
-│   └── reference_manual.pdf    # All internal functions and their arguments (roxygen-generated)
-├── py/                         # Python implementation (see py/README.md)
-│   ├── config/defaults.py      # Python config (mirrors R defaults)
-│   └── src/                    # All Python source modules
-├── images/                     # Rendered stimulus images
-├── images_eval/                # Answer-stripped copies (generated automatically)
-└── output/                     # Analysis outputs (plots, summary CSVs)
 ```
+Ebbinghaus/
+├── config/defaults.R               # Configurable parameters (shapes, sizes, colors, etc.)
+├── R/
+│   ├── generate_design.R           # Phase 1 — Build a complete design matrix
+│   ├── render_stimuli.R            # Phase 1 — Batch render trial table to images
+│   ├── evaluate.R                  # Phase 2 — vitals-based evaluation pipeline
+│   └── analyze.R                   # Phase 3 — Metrics and plots
+├── data/
+│   ├── trials.csv                  # Trial metadata (Phase 1 output → Phase 2 input)
+│   ├── prompts.csv                 # Prompt variants for evaluation (Phase 2 input)
+│   └── evals.csv                   # Evaluation results (Phase 2 output → Phase 3 input)
+├── images/                         # Rendered stimulus images (Phase 1 output)
+├── docs/                           # Reference manuals
+├── py/                             # Python implementation (see py/README.md)
+└── output/                         # Analysis outputs (Phase 3)
+```
+
+`data/` serves as the interchange directory between phases: each phase writes its output there, and the next phase reads from it. For the complete project tree with all internal modules, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
 
 ---
 
 ## Python Version
 
 A full Python port is available in the [`py/`](py/) directory, using `pandas`, `matplotlib`, and [Inspect AI](https://inspect.ai-safety-institute.org.uk/). Both versions write to the same shared directories (`images/`, `data/`, `output/`). See [`py/README.md`](py/README.md) for setup and usage.
+
+---
+
+## Reference Manual
+
+For the full internal-function reference, see [`docs/reference_manual.pdf`](docs/reference_manual.pdf).
 
 ---
 

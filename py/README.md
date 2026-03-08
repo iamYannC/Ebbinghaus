@@ -1,6 +1,8 @@
-# Ebbinghaus Benchmark — Python
+# Ebbinghaus Benchmark - Python <img src="../docs/hex.png" alt="Ebbinghause hex logo" align="right" height="150"/>
 
 Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Uses `pandas`, `matplotlib`, and [Inspect AI](https://inspect.ai-safety-institute.org.uk/) for evaluation. Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
+
+[![DOI](https://zenodo.org/badge/1175680688.svg)](https://doi.org/10.5281/zenodo.18906801)
 
 ## Setup
 
@@ -30,7 +32,7 @@ from src.render_stimuli import render_stimuli
 
 trials = generate_design(seed=42, n_per_tier=5)
 render_stimuli(trials)
-trials.to_csv("data/trials.csv", index=False)
+trials.to_csv("data/trials.csv", index=False) # current trials.csv is from R
 
 # Phase 2: Evaluate models
 import pandas as pd
@@ -84,20 +86,20 @@ Computed metrics include overall accuracy, accuracy by tier, psychometric curves
 
 ```
 py/
-├── pyproject.toml              # Dependencies (uv / pip)
-├── config/
-│   └── defaults.py             # Configurable parameters
+├── config/defaults.py              # Configurable parameters (mirrors R defaults)
 ├── src/
-│   ├── draw_shape.py           # Atomic shape drawing (matplotlib)
-│   ├── draw_trial.py           # Compose full stimulus image
-│   ├── verify_trial.py         # Compute ground truth
-│   ├── classify_tier.py        # Assign difficulty tier
-│   ├── generate_trial.py       # Generate single trial parameters
-│   ├── generate_design.py      # Build complete design matrix
-│   ├── render_stimuli.py       # Batch render to images/
-│   ├── strip_answer.py         # Strip ground truth from filenames
-│   ├── evaluate.py             # Inspect AI evaluation pipeline
-│   └── analyze.py              # Metrics and plots
+│   ├── generate_design.py          # Phase 1 — Build a complete design matrix
+│   ├── render_stimuli.py           # Phase 1 — Batch render trial table to images
+│   ├── evaluate.py                 # Phase 2 — Inspect AI evaluation pipeline
+│   └── analyze.py                  # Phase 3 — Metrics and plots
 ```
 
-See the [root README](../README.md) for tier definitions and project overview, and the [Python Variable Registry](VARIABLE_REGISTRY.md) for the Python-specific variable reference.
+`data/`, `images/`, and `output/` are shared with R at the project root. For the full module listing, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
+
+See the [root README](../README.md) for tier definitions and project overview.
+
+---
+
+## Reference Manual
+
+For the full internal-function reference, see [`docs/py_reference_manual.pdf`](../docs/py_reference_manual.pdf).

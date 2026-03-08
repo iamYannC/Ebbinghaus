@@ -1,6 +1,6 @@
-# Ebbinghaus Benchmark - Variable Registry
+# Ebbinghaus Benchmark — Technical Reference
 
-This document provides a complete reference of all variables used in the project. Each table is organized by **Phase**, and variables are annotated with their role, allowed values, and how to modify them.
+This document provides a complete reference of all variables used in the project, the full project structure, and phase I/O schemas. Each table is organized by **Phase**, and variables are annotated with their role, allowed values, and how to modify them.
 
 ---
 
@@ -11,6 +11,53 @@ This document provides a complete reference of all variables used in the project
 | **1. Stimulus Creation** | `source("R/generate_design.R")`, `source("R/render_stimuli.R")` | `trials` data frame + rendered images in `images/` |
 | **2. Evaluation** | `trials` data frame, `data/prompts.csv`, model list, API keys | vitals `Task` objects (+ optional `data/evals.csv`) |
 | **3. Analysis** | vitals `Task` objects (or `data/evals.csv`), `data/trials.csv`, `data/prompts.csv` | Summary tables and plots in `output/` |
+
+---
+
+## Project Structure
+
+```
+Ebbinghaus/
+├── config/
+│   └── defaults.R                  # Configurable parameters (shapes, sizes, colors, etc.)
+├── R/
+│   ├── generate_design.R           # Phase 1 — Build a complete design matrix
+│   ├── generate_trial.R            # Generate a single trial's parameters
+│   ├── render_stimuli.R            # Phase 1 — Batch render trial table to images
+│   ├── draw_trial.R                # Compose full stimulus image from trial parameters
+│   ├── draw_shape.R                # Atomic shape drawing (ggplot2 + ggforce)
+│   ├── verify_trial.R              # Compute ground truth from size parameters
+│   ├── classify_tier.R             # Assign difficulty tier (0–3)
+│   ├── strip_answer.R              # Strip ground truth from filenames for evaluation
+│   ├── evaluate.R                  # Phase 2 — vitals-based evaluation pipeline
+│   ├── analyze.R                   # Phase 3 — Metrics and plots
+│   └── legacy/
+│       └── evaluate.R              # Pre-vitals evaluation (CSV-based, for reference)
+├── py/                             # Python implementation (see py/README.md)
+│   ├── config/defaults.py          # Python config (mirrors R defaults)
+│   ├── src/                        # All Python source modules (mirrors R/)
+│   ├── pyproject.toml              # Dependencies (uv / pip)
+│   ├── README.md
+│   └── TECHNICAL_REFERENCE.md      # Python-specific technical reference
+├── data/
+│   ├── trials.csv                  # Trial metadata (Phase 1 output → Phase 2 input)
+│   ├── prompts.csv                 # Prompt variants for evaluation (Phase 2 input)
+│   └── evals.csv                   # Evaluation results (Phase 2 output → Phase 3 input)
+├── images/                         # Rendered stimulus images (Phase 1 output)
+├── images_eval/                    # Answer-stripped copies (generated automatically)
+├── output/                         # Analysis outputs: plots (.png) and summaries (.csv)
+├── docs/
+│   ├── reference_manual.pdf        # R function reference (roxygen2-generated)
+│   ├── py_reference_manual.pdf     # Python function reference (docstring-generated)
+│   ├── hex.png                     # Project logo
+│   └── stimuli-example.png         # Example stimuli image for README
+├── TECHNICAL_REFERENCE.md          # This file — schemas, variables, combinatorics
+├── CITATION.cff                    # Citation metadata (Zenodo / GitHub)
+├── LICENSE.md                      # CC BY 4.0
+└── README.md                       # Project overview, tier definitions, usage
+```
+
+`data/` serves as the interchange directory between phases: `trials.csv` is produced by Phase 1 and consumed by Phase 2; `evals.csv` is produced by Phase 2 and consumed by Phase 3. `prompts.csv` is manually authored and used by Phase 2.
 
 ---
 
@@ -316,4 +363,4 @@ run_evals(trials, prompts, models)
 
 ---
 
-**For project overview, tier definitions, and usage examples, see [`README.md`](README.md).**
+**For project overview, tier definitions, and usage examples, see [`README.md`](README.md). For the Python-specific reference, see [`py/TECHNICAL_REFERENCE.md`](py/TECHNICAL_REFERENCE.md).**
