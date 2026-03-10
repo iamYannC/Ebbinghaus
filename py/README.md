@@ -16,7 +16,7 @@ uv sync
 Or with pip:
 
 ```bash
-pip install -r py/pyproject.toml
+pip install .
 ```
 
 
