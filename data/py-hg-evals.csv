@@ -1,0 +1,170 @@
+eval_id,trial_id,prompt_id,provider,model,model_version,temperature,max_tokens,response_larger,response_confidence,raw_response,latency_ms,timestamp,error
+1,1,1,google,gemma-3-4b-it,NA,0,50,b,NA,top,2334,2026-03-11T03:16:14Z,NA
+2,2,1,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2155,2026-03-11T03:16:16Z,NA
+3,3,1,google,gemma-3-4b-it,NA,0,50,b,NA,top,1994,2026-03-11T03:16:18Z,NA
+4,4,1,google,gemma-3-4b-it,NA,0,50,a,NA,bottom-left,2161,2026-03-11T03:16:20Z,NA
+5,5,1,google,gemma-3-4b-it,NA,0,50,b,NA,right,1994,2026-03-11T03:16:22Z,NA
+6,6,1,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,2003,2026-03-11T03:16:24Z,NA
+7,7,1,google,gemma-3-4b-it,NA,0,50,b,NA,right,1992,2026-03-11T03:16:26Z,NA
+8,8,1,google,gemma-3-4b-it,NA,0,50,a,NA,left,1993,2026-03-11T03:16:28Z,NA
+9,9,1,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1992,2026-03-11T03:16:30Z,NA
+10,10,1,google,gemma-3-4b-it,NA,0,50,b,NA,right,1998,2026-03-11T03:16:32Z,NA
+11,11,1,google,gemma-3-4b-it,NA,0,50,a,NA,left,1993,2026-03-11T03:16:34Z,NA
+12,12,1,google,gemma-3-4b-it,NA,0,50,b,NA,top,1996,2026-03-11T03:16:36Z,NA
+13,13,1,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2149,2026-03-11T03:16:38Z,NA
+14,14,1,google,gemma-3-4b-it,NA,0,50,a,NA,left,1995,2026-03-11T03:16:40Z,NA
+15,15,1,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2157,2026-03-11T03:16:42Z,NA
+16,16,1,google,gemma-3-4b-it,NA,0,50,b,NA,right,1998,2026-03-11T03:16:44Z,NA
+17,17,1,google,gemma-3-4b-it,NA,0,50,b,NA,right,1997,2026-03-11T03:16:46Z,NA
+18,18,1,google,gemma-3-4b-it,NA,0,50,b,NA,right,2004,2026-03-11T03:16:49Z,NA
+19,19,1,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1997,2026-03-11T03:16:51Z,NA
+20,20,1,google,gemma-3-4b-it,NA,0,50,a,NA,left,1996,2026-03-11T03:16:53Z,NA
+21,1,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,2001,2026-03-11T03:16:55Z,NA
+22,2,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom-left,2155,2026-03-11T03:16:57Z,NA
+23,3,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1992,2026-03-11T03:16:59Z,NA
+24,4,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom-left,2150,2026-03-11T03:17:01Z,NA
+25,5,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1990,2026-03-11T03:17:03Z,NA
+26,6,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1994,2026-03-11T03:17:05Z,NA
+27,7,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1997,2026-03-11T03:17:07Z,NA
+28,8,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,2002,2026-03-11T03:17:09Z,NA
+29,9,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1992,2026-03-11T03:17:11Z,NA
+30,10,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1995,2026-03-11T03:17:13Z,NA
+31,11,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1994,2026-03-11T03:17:15Z,NA
+32,12,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1992,2026-03-11T03:17:17Z,NA
+33,13,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom-left,2146,2026-03-11T03:17:19Z,NA
+34,14,2,google,gemma-3-4b-it,NA,0,50,a,NA,left,1990,2026-03-11T03:17:21Z,NA
+35,15,2,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2156,2026-03-11T03:17:23Z,NA
+36,16,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1999,2026-03-11T03:17:25Z,NA
+37,17,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1992,2026-03-11T03:17:27Z,NA
+38,18,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1997,2026-03-11T03:17:29Z,NA
+39,19,2,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1993,2026-03-11T03:17:32Z,NA
+40,20,2,google,gemma-3-4b-it,NA,0,50,b,NA,right,1994,2026-03-11T03:17:34Z,NA
+41,1,3,google,gemma-3-4b-it,NA,0,50,b,NA,"here's a description of the two central shapes and an assessment of their size:
+
+**description:**
+
+*   **top shape:** the top shape is a cluster of seven small circles, all the same color (blue). it is arranged in",5579,2026-03-11T03:17:39Z,NA
+42,2,3,google,gemma-3-4b-it,NA,0,50,unknown,NA,"here's a description of the central shapes and the determination of which is larger:
+
+**description:**
+
+the top central shape is a square with a smaller square in the center. the bottom central shape is a circle with six smaller squares arranged around",5826,2026-03-11T03:17:45Z,NA
+43,3,3,google,gemma-3-4b-it,NA,0,50,a,NA,"okay, let's analyze the two central shapes.
+
+**description:**
+
+the top shape is a blue square. the bottom shape is a black square. both are simple, regular squares.
+
+**comparison:**
+
+looking at the two squares independently",5778,2026-03-11T03:17:51Z,NA
+44,4,3,google,gemma-3-4b-it,NA,0,50,unknown,NA,"here's a description of the shapes and the answer:
+
+**description:**
+
+the image shows three shapes: a large, light gray circle at the top, a medium, dark gray circle in the middle, and a small, light gray circle",5779,2026-03-11T03:17:57Z,NA
+45,5,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a description of the central shapes and the determination of which is larger:
+
+**description:**
+
+the image shows two central shapes. on the left is a square, and on the right is a circle. the square is black, and",5785,2026-03-11T03:18:02Z,NA
+46,6,3,google,gemma-3-4b-it,NA,0,50,b,NA,"here's a description of the two central shapes and my determination of which is larger:
+
+**description:**
+
+*   **top shape:** this is a circular arrangement of 10 smaller squares, with a single larger black square at the center",5743,2026-03-11T03:18:08Z,NA
+47,7,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's an analysis of the two central shapes:
+
+**description:**
+
+both shapes are composed of squares. the left shape is made up of six red squares arranged in a star pattern. the right shape is made up of four squares arranged in",5722,2026-03-11T03:18:14Z,NA
+48,8,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a description of the central shapes and my determination of which is larger:
+
+**description:**
+
+*   **left shape:** this central shape is a blue circle surrounded by four smaller grey circles radiating outwards. there’s a lighter grey",5659,2026-03-11T03:18:20Z,NA
+49,9,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a breakdown of the image and the answer:
+
+**description of the central shapes:**
+
+*   **top shape:** the top central shape is a dark gray square.
+*   **bottom shape:** the bottom central shape is a",5733,2026-03-11T03:18:25Z,NA
+50,10,3,google,gemma-3-4b-it,NA,0,50,a,NA,"okay, let's analyze the images.
+
+**description of the central shapes:**
+
+*   **left shape:** this is a square with a light blue outline. around the square are six blue circles.
+*   **right shape:** this",5734,2026-03-11T03:18:31Z,NA
+51,11,3,google,gemma-3-4b-it,NA,0,50,a,NA,"okay, let’s analyze the central shapes.
+
+**description:**
+
+the left central shape is a circle with six red dots arranged around it, forming a radial pattern. the right central shape is a square with four smaller squares arranged in a cross",5733,2026-03-11T03:18:37Z,NA
+52,12,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a description of the central shapes and my determination of which is larger:
+
+**description:**
+
+the top central shape is a gray circle. the bottom central shape is a gray square. both shapes are surrounded by smaller shapes.
+
+**",5815,2026-03-11T03:18:43Z,NA
+53,13,3,google,gemma-3-4b-it,NA,0,50,unknown,NA,"here's a description of the central shapes and the determination of which is larger:
+
+**description:**
+
+the image contains two central shapes. the top one is a pentagon comprised of five circles. the bottom one is a pentagon comprised of",5876,2026-03-11T03:18:49Z,NA
+54,14,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a description of the central shapes and my determination of which is larger:
+
+**description:**
+
+both central shapes are red squares, but they are surrounded by different shapes. the left one is surrounded by eight smaller gray squares, while the",5889,2026-03-11T03:18:55Z,NA
+55,15,3,google,gemma-3-4b-it,NA,0,50,unknown,NA,"here's a description of the two central shapes and an assessment of their size:
+
+**description:**
+
+the two central shapes are both squares. the top-left square is a dark gray color, while the bottom-right square is a light",5716,2026-03-11T03:19:00Z,NA
+56,16,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here’s a description of the central shapes and my determination of which is larger:
+
+**description:**
+
+*   **left shape:** this shape consists of a central dark circle surrounded by 8 smaller red dots equally spaced around it. it resembles",5661,2026-03-11T03:19:06Z,NA
+57,17,3,google,gemma-3-4b-it,NA,0,50,unknown,NA,"here's a description and the determination of which central shape is larger:
+
+**description:**
+
+both central shapes are made up of smaller squares arranged in a radial pattern. the first one is a symmetrical design composed of gray and red squares. the",5604,2026-03-11T03:19:12Z,NA
+58,18,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a description of the central shapes and an assessment of their relative sizes:
+
+**description:**
+
+the image shows two circular shapes. the left circle is a vibrant blue, while the right circle is a muted gray. both circles appear to",5625,2026-03-11T03:19:17Z,NA
+59,19,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a breakdown of the image:
+
+**description:**
+
+the top central shape consists of six gray circles arranged in a somewhat irregular, clustered formation. the bottom central shape consists of eight white circles arranged in a circular pattern around a darker gray",5569,2026-03-11T03:19:23Z,NA
+60,20,3,google,gemma-3-4b-it,NA,0,50,a,NA,"here's a breakdown of my observations:
+
+**description:**
+
+*   **left shape:** a red square with nine small red dots arranged around its perimeter.
+*   **right shape:** a blue square with nine dark grey circles arranged around",5594,2026-03-11T03:19:28Z,NA
+61,1,4,google,gemma-3-4b-it,NA,0,50,b,NA,top,1988,2026-03-11T03:19:30Z,NA
+62,2,4,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2152,2026-03-11T03:19:33Z,NA
+63,3,4,google,gemma-3-4b-it,NA,0,50,b,NA,top,1994,2026-03-11T03:19:35Z,NA
+64,4,4,google,gemma-3-4b-it,NA,0,50,a,NA,bottom-left,2154,2026-03-11T03:19:37Z,NA
+65,5,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1992,2026-03-11T03:19:39Z,NA
+66,6,4,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1996,2026-03-11T03:19:41Z,NA
+67,7,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1997,2026-03-11T03:19:43Z,NA
+68,8,4,google,gemma-3-4b-it,NA,0,50,a,NA,left,2000,2026-03-11T03:19:45Z,NA
+69,9,4,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1995,2026-03-11T03:19:47Z,NA
+70,10,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1994,2026-03-11T03:19:49Z,NA
+71,11,4,google,gemma-3-4b-it,NA,0,50,a,NA,left,1994,2026-03-11T03:19:51Z,NA
+72,12,4,google,gemma-3-4b-it,NA,0,50,b,NA,top,1998,2026-03-11T03:19:53Z,NA
+73,13,4,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2149,2026-03-11T03:19:55Z,NA
+74,14,4,google,gemma-3-4b-it,NA,0,50,a,NA,left,1994,2026-03-11T03:19:57Z,NA
+75,15,4,google,gemma-3-4b-it,NA,0,50,b,NA,top-right,2137,2026-03-11T03:19:59Z,NA
+76,16,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1988,2026-03-11T03:20:01Z,NA
+77,17,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1995,2026-03-11T03:20:03Z,NA
+78,18,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1990,2026-03-11T03:20:05Z,NA
+79,19,4,google,gemma-3-4b-it,NA,0,50,a,NA,bottom,1991,2026-03-11T03:20:07Z,NA
+80,20,4,google,gemma-3-4b-it,NA,0,50,b,NA,right,1992,2026-03-11T03:20:09Z,NA
