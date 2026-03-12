@@ -3,9 +3,12 @@
 A flexible ~~R toolkit~~ (Now also for [Python users!](py/README.md)) for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
 
 
-[![DOI](https://zenodo.org/badge/1175680688.svg)](https://doi.org/10.5281/zenodo.18906801)
-
-
+[![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
+[![R](https://img.shields.io/badge/R-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
+[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-20BEFF?logo=kaggle)](https://www.kaggle.com/datasets/yanncohen/ebbinghaus-illusion-benchmark)
+[![Kaggle Notebook](https://img.shields.io/badge/Kaggle-Notebook-20BEFF?logo=kaggle)](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-brightgreen?logo=orcid)](https://orcid.org/0009-0009-0509-3609)
 
 ## Quick Start
 
@@ -25,12 +28,12 @@ prompts <- read.csv("data/prompts.csv", stringsAsFactors = FALSE)
 models  <- list(list(provider = "openai", model = "gpt-5.4-pro"))
 tasks   <- run_evals(trials, prompts, models)
 
-# Phase 3: Analyze results
+# Phase 3: Analyze results (plots displayed, metrics in global env)
 source("R/analyze.R")
 results <- analyze_results(tasks = tasks)
 ```
 
-Phase 1 (stimulus creation) works standalone. Phase 2 requires API keys and the `vitals`/`ellmer` packages. Phase 3 is optional - a convenience layer for standard metrics and plots. See below for details on each phase.
+Phase 1 (stimulus creation) works standalone. Phase 2 requires API keys and the `vitals`/`ellmer` packages. Phase 3 is optional — a convenience layer for standard metrics and plots. See below for details on each phase.
 
 ------------------------------------------------------------------------
 
@@ -113,14 +116,19 @@ A complementary step that joins evaluation results with trial metadata, computes
 |            |                                                              |
 |------------------------------------|------------------------------------|
 | **Input**  | vitals `Task` objects from Phase 2 (or a legacy `evals.csv`) |
-| **Output** | Plots and summary CSVs in `output/`                          |
+| **Output** | Plots (displayed or saved to `output/`) + metric data frames in the global environment |
 
 ``` r
 source("R/analyze.R")
+
+# Default: display plots interactively, metric data frames assigned to global env
 results <- analyze_results(tasks = tasks)
+
+# Alternative: save plots as PNGs instead of displaying
+results <- analyze_results(tasks = tasks, show_plots = FALSE)
 ```
 
-Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more. See [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md) for the full list of metrics and generated plots.
+By default, plots are printed to the graphics device for interactive viewing. Set `show_plots = FALSE` to save them as PNGs to `output/` instead. Metric data frames (e.g., `accuracy_by_model`, `dprime`, `spatial_bias`) are assigned to the global environment so you can inspect or export them as needed. See [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md) for the full list of metrics and generated plots.
 
 ------------------------------------------------------------------------
 
@@ -141,7 +149,7 @@ Ebbinghaus/
 ├── images/                         # Rendered stimulus images (Phase 1 output)
 ├── docs/                           # Reference manuals
 ├── py/                             # Python implementation (see py/README.md)
-└── output/                         # Analysis outputs (Phase 3)
+└── output/                         # Saved plots (Phase 3, when show_plots = FALSE)
 ```
 
 `data/` serves as the interchange directory between phases: each phase writes its output there, and the next phase reads from it. For the complete project tree with all internal modules, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
