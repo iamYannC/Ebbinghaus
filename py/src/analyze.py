@@ -11,7 +11,8 @@ Supports three input modes:
 
 Output behavior:
   - show_plots=True  (default): plots are displayed via plt.show().
-  - show_plots=False: plots are saved as PNG to output_dir.
+  - show_plots=False: plots are built but not displayed. Access them
+    via results["plots"] (e.g., for IPython.display in notebooks).
   - Metric DataFrames are returned in results["metrics"] dict.
 
 Usage:
@@ -217,16 +218,14 @@ def analyze_results(
         trials_path: Path to trials.csv.
         evals_path: Path to legacy evals.csv (only if logs and evals_df are None).
         prompts_path: Path to prompts.csv.
-        output_dir: Directory for plots (only used when show_plots=False).
+        output_dir: Reserved for future use.
         show_plots: If True (default), display plots via plt.show().
-            If False, save plots as PNG to output_dir.
+            If False, plots are built but not displayed — access them
+            via results["plots"] (e.g., for IPython.display).
 
     Returns:
         Dict with: data, metrics, plots.
     """
-    if not show_plots:
-        os.makedirs(output_dir, exist_ok=True)
-
     data = load_eval_data(
         logs=logs,
         evals_df=evals_df,
@@ -627,12 +626,8 @@ def analyze_results(
     if show_plots:
         for pname, fig in plots.items():
             fig.show()
-        print("Analysis complete. Metrics available in results['metrics'].")
-    else:
-        for pname, fig in plots.items():
-            fig.savefig(os.path.join(output_dir, f"{pname}.png"), bbox_inches="tight")
-            plt.close(fig)
-        print(f"Analysis complete. Plots saved to: {output_dir}. "
-              "Metrics available in results['metrics'].")
+
+    print("Analysis complete. Metrics available in results['metrics']. "
+          "Plots available in results['plots'].")
 
     return {"data": data, "metrics": metrics, "plots": plots}
