@@ -460,7 +460,7 @@ def analyze_results(
             sub = confusion[confusion["model_label"] == m]
             pivot = sub.pivot_table(
                 index="true_larger", columns="parsed_response", values="n", fill_value=0
-            )
+            ).astype(int)
             fig, ax = plt.subplots(figsize=(6, 4))
             sns.heatmap(pivot, annot=True, fmt="d", cmap="Blues", ax=ax)
             ax.set_title(f"Confusion Matrix: {m}")
