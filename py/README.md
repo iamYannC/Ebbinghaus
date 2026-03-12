@@ -2,7 +2,11 @@
 
 Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Uses `pandas`, `matplotlib`, and [Inspect AI](https://inspect.ai-safety-institute.org.uk/) for evaluation. Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
 
-[![DOI](https://zenodo.org/badge/1175680688.svg)](https://doi.org/10.5281/zenodo.18906801)
+[![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://www.python.org/)
+[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-20BEFF?logo=kaggle)](https://www.kaggle.com/datasets/yanncohen/ebbinghaus-illusion-benchmark)
+[![Kaggle Notebook](https://img.shields.io/badge/Kaggle-Notebook-20BEFF?logo=kaggle)](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
 ## Setup
 
@@ -41,10 +45,10 @@ prompts = pd.read_csv("data/prompts.csv")
 models = [{"provider": "openai", "model": "gpt-5.4-pro"}]
 logs = run_evals(trials, prompts, models)
 
-# Phase 3: Analyze results
+# Phase 3: Analyze results (plots displayed, metrics in returned dict)
 from src.analyze import analyze_results
 
-results = analyze_results(logs=logs)
+results = analyze_results(logs=logs)  # or: analyze_results(evals_df=evals)
 ```
 
 ## Phase 1: Stimulus Creation
@@ -71,15 +75,21 @@ Uses Inspect AI's `Task`, `@solver`, and `@scorer` decorators. API keys are read
 
 | | |
 |---|---|
-| **Input** | Inspect AI logs (or legacy `evals.csv`) |
-| **Output** | Plots and summary CSVs in `output/` |
+| **Input** | Inspect AI logs, evals DataFrame, or legacy `evals.csv` |
+| **Output** | Plots (displayed or saved to `output/`) + metric DataFrames in the returned dict |
 
 ```python
+# Default: display plots inline, metrics in returned dict
 results = analyze_results(logs=logs)
-# or: results = analyze_results(evals_path="data/evals.csv")
+
+# From an in-memory DataFrame (e.g., in a Kaggle notebook):
+results = analyze_results(evals_df=evals)
+
+# Save plots as PNGs instead of displaying:
+results = analyze_results(logs=logs, show_plots=False)
 ```
 
-Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more.
+By default, plots are displayed inline via `plt.show()`. Set `show_plots=False` to save them as PNGs to `output/`. Metric DataFrames (e.g., `results["metrics"]["accuracy_by_model"]`) are always returned in the result dict for inspection or export. Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more.
 
 ## File Structure
 
@@ -93,7 +103,7 @@ py/
 │   └── analyze.py                  # Phase 3 — Metrics and plots
 ```
 
-`data/`, `images/`, and `output/` are shared with R at the project root. For the full module listing, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
+`data/`, `images/`, and `output/` are shared with R at the project root. `output/` is only written when `show_plots=False`. For the full module listing, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
 
 See the [root README](../README.md) for tier definitions and project overview.
 
