@@ -4,15 +4,24 @@ analyze.py — Phase 3: Analysis
 Joins evaluation results with trial and prompt metadata, computes metrics,
 and generates plots.
 
-Supports two input modes:
+Supports three input modes:
   1. Inspect AI logs (primary): pass eval logs from run_evals()
-  2. Legacy CSV (backward-compatible): pass path to evals.csv
+  2. evals_df (DataFrame): pass a pandas DataFrame in the legacy evals schema
+  3. Legacy CSV (backward-compatible): pass path to evals.csv
+
+Output behavior:
+  - show_plots=True  (default): plots are displayed via plt.show().
+  - show_plots=False: plots are saved as PNG to output_dir.
+  - Metric DataFrames are returned in results["metrics"] dict.
 
 Usage:
   from src.analyze import analyze_results
 
   # From Inspect AI logs:
   results = analyze_results(logs=logs)
+
+  # From a DataFrame (e.g., Kaggle notebook):
+  results = analyze_results(evals_df=evals)
 
   # From CSV (legacy):
   results = analyze_results(evals_path="data/evals.csv")
@@ -25,8 +34,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 
-from src.evaluate import parse_response
-
 
 # =============================================================================
 # Data ingestion
@@ -34,25 +41,26 @@ from src.evaluate import parse_response
 
 def load_eval_data(
     logs=None,
+    evals_df: pd.DataFrame | None = None,
     trials_path: str = "data/trials.csv",
     prompts_path: str = "data/prompts.csv",
     evals_path: str | None = None,
 ) -> pd.DataFrame:
-    """Load and join data from Inspect AI logs or legacy CSV files.
+    """Load and join data from Inspect AI logs, a DataFrame, or legacy CSV.
 
     Args:
         logs: List of Inspect AI eval log objects (from run_evals()).
+        evals_df: A pandas DataFrame in the legacy evals schema.
         trials_path: Path to trials.csv.
         prompts_path: Path to prompts.csv.
-        evals_path: Path to legacy evals.csv (only if logs is None).
+        evals_path: Path to legacy evals.csv (only if logs and evals_df are None).
 
     Returns:
         A DataFrame with all columns needed for analysis.
     """
-    if logs is not None and evals_path is not None:
-        raise ValueError("Provide `logs` or `evals_path`, not both.")
-    if logs is None and evals_path is None:
-        raise ValueError("Provide either `logs` (Inspect AI logs) or `evals_path` (CSV).")
+    sources = sum(x is not None for x in [logs, evals_df, evals_path])
+    if sources != 1:
+        raise ValueError("Provide exactly one of: `logs`, `evals_df`, or `evals_path`.")
 
     trials = pd.read_csv(trials_path)
     prompts = pd.read_csv(prompts_path)
@@ -105,6 +113,26 @@ def load_eval_data(
         data["illusion_direction"] = np.where(
             (data["tier"] == 1) & data["parsed_response"].isin(["a", "b"]),
             data["parsed_response"],
+            None,
+        )
+
+    elif evals_df is not None:
+        # --- DataFrame path (e.g., Kaggle notebook) ---
+        data = evals_df.merge(trials, on="trial_id", how="left")
+        data = data.merge(prompts, on="prompt_id", how="left")
+
+        data["correct"] = data["response_larger"] == data["true_larger"]
+        data["model_label"] = data["provider"] + "/" + data["model"]
+        data["prompt_description"] = data["description"]
+        data["parsed_response"] = data["response_larger"]
+        data["illusion_susceptible"] = np.where(
+            data["tier"] == 1,
+            data["response_larger"] != "equal",
+            np.nan,
+        )
+        data["illusion_direction"] = np.where(
+            (data["tier"] == 1) & data["response_larger"].isin(["a", "b"]),
+            data["response_larger"],
             None,
         )
 
@@ -172,30 +200,36 @@ def compute_dprime(data: pd.DataFrame) -> pd.DataFrame:
 
 def analyze_results(
     logs=None,
+    evals_df: pd.DataFrame | None = None,
     trials_path: str = "data/trials.csv",
     evals_path: str | None = None,
     prompts_path: str = "data/prompts.csv",
     output_dir: str = "output",
+    show_plots: bool = True,
 ) -> dict:
     """Analyze evaluation results.
 
-    Computes accuracy and bias metrics and generates key plots. All outputs
-    (plots as PNG, tables as CSV) are saved to output_dir.
+    Computes accuracy and bias metrics and generates key plots.
 
     Args:
         logs: List of Inspect AI eval log objects (from run_evals()).
+        evals_df: A pandas DataFrame in the legacy evals schema.
         trials_path: Path to trials.csv.
-        evals_path: Path to legacy evals.csv (only if logs is None).
+        evals_path: Path to legacy evals.csv (only if logs and evals_df are None).
         prompts_path: Path to prompts.csv.
-        output_dir: Directory for plots and summary tables.
+        output_dir: Directory for plots (only used when show_plots=False).
+        show_plots: If True (default), display plots via plt.show().
+            If False, save plots as PNG to output_dir.
 
     Returns:
         Dict with: data, metrics, plots.
     """
-    os.makedirs(output_dir, exist_ok=True)
+    if not show_plots:
+        os.makedirs(output_dir, exist_ok=True)
 
     data = load_eval_data(
         logs=logs,
+        evals_df=evals_df,
         trials_path=trials_path,
         prompts_path=prompts_path,
         evals_path=evals_path,
@@ -587,17 +621,18 @@ def analyze_results(
         plots["confidence_calibration"] = fig
 
     # =========================================================================
-    # Save outputs
+    # Output
     # =========================================================================
 
-    for pname, fig in plots.items():
-        fig.savefig(os.path.join(output_dir, f"{pname}.png"), bbox_inches="tight")
-        plt.close(fig)
-
-    for mname, df in metrics.items():
-        if isinstance(df, pd.DataFrame) and len(df) > 0:
-            df.to_csv(os.path.join(output_dir, f"{mname}.csv"), index=False)
-
-    print(f"Analysis complete. Plots and tables saved to: {output_dir}")
+    if show_plots:
+        for pname, fig in plots.items():
+            fig.show()
+        print("Analysis complete. Metrics available in results['metrics'].")
+    else:
+        for pname, fig in plots.items():
+            fig.savefig(os.path.join(output_dir, f"{pname}.png"), bbox_inches="tight")
+            plt.close(fig)
+        print(f"Analysis complete. Plots saved to: {output_dir}. "
+              "Metrics available in results['metrics'].")
 
     return {"data": data, "metrics": metrics, "plots": plots}
