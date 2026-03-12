@@ -94,6 +94,45 @@ logs = run_evals(trials, prompts, models)
 
 ---
 
+## Phase 3: `analyze_results()`
+
+### Parameters
+
+| Parameter | Type | Default | Meaning |
+|-----------|------|---------|---------|
+| `logs` | list | `None` | Inspect AI eval log objects from `run_evals()` |
+| `evals_df` | DataFrame | `None` | Evals DataFrame in the legacy schema (e.g., from a notebook) |
+| `trials_path` | str | `"data/trials.csv"` | Path to trials CSV |
+| `evals_path` | str | `None` | Path to legacy evals CSV |
+| `prompts_path` | str | `"data/prompts.csv"` | Path to prompts CSV |
+| `show_plots` | bool | `True` | If `True`, display plots via `plt.show()`. If `False`, save as PNGs to `output_dir`. |
+| `output_dir` | str | `"output"` | Directory for saved plots (only used when `show_plots=False`) |
+
+Provide exactly one of `logs`, `evals_df`, or `evals_path`.
+
+### Returned metric DataFrames
+
+Accessible via `results["metrics"]["<name>"]`:
+
+| Name | Description |
+|------|-------------|
+| `accuracy_by_model` | Overall accuracy per model |
+| `accuracy_by_model_tier` | Accuracy per model × tier |
+| `accuracy_by_prompt` | Accuracy per prompt variant × model |
+| `accuracy_by_prompt_tier` | Accuracy per prompt × model × tier |
+| `illusion_susceptibility` | Tier 1 susceptibility rate per model |
+| `illusion_direction` | Tier 1 direction bias per model |
+| `spatial_bias` | A-vs-B response preference per model |
+| `spatial_bias_by_orientation` | A-vs-B preference by orientation per model |
+| `congruency_effect` | Tier 3 − Tier 2 accuracy delta per model |
+| `confusion` | Confusion matrix (true vs predicted counts) per model |
+| `dprime` | Signal-detection d′ per model |
+| `temperature_effect` | Accuracy by temperature (conditional) |
+| `format_effect` | Accuracy by file format (conditional) |
+| `confidence_calibration` | Calibration bins (conditional) |
+
+---
+
 ## Key Differences from R Version
 
 | Aspect | R | Python |
