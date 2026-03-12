@@ -10,7 +10,7 @@ This document provides a complete reference of all variables used in the project
 |-------|-------|--------|
 | **1. Stimulus Creation** | `source("R/generate_design.R")`, `source("R/render_stimuli.R")` | `trials` data frame + rendered images in `images/` |
 | **2. Evaluation** | `trials` data frame, `data/prompts.csv`, model list, API keys | vitals `Task` objects (+ optional `data/evals.csv`) |
-| **3. Analysis** | vitals `Task` objects (or `data/evals.csv`), `data/trials.csv`, `data/prompts.csv` | Summary tables and plots in `output/` |
+| **3. Analysis** | vitals `Task` objects (or `data/evals.csv`), `data/trials.csv`, `data/prompts.csv` | Plots (displayed or saved) + metric data frames in global environment |
 
 ---
 
@@ -45,7 +45,7 @@ Ebbinghaus/
 │   └── evals.csv                   # Evaluation results (Phase 2 output → Phase 3 input)
 ├── images/                         # Rendered stimulus images (Phase 1 output)
 ├── images_eval/                    # Answer-stripped copies (generated automatically)
-├── output/                         # Analysis outputs: plots (.png) and summaries (.csv)
+├── output/                         # Saved plots (Phase 3, when show_plots = FALSE)
 ├── docs/
 │   ├── reference_manual.pdf        # R function reference (roxygen2-generated)
 │   ├── py_reference_manual.pdf     # Python function reference (docstring-generated)
@@ -220,7 +220,7 @@ Each unique (prompt, model) combination creates one vitals Task. Each trial with
 ## Derived Analysis Variables — Phase 3
 
 **Computed by:** `analyze_results()`  
-**Stored in:** Returned `data` data frame (not saved to CSV)  
+**Stored in:** Returned `data` data frame and metric data frames assigned to the global environment  
 **Source:** Join of `trials.csv` + `evals.csv` + `prompts.csv`
 
 | # | Variable | Type | Values | Derived From | Meaning |
@@ -230,10 +230,42 @@ Each unique (prompt, model) combination creates one vitals Task. Each trial with
 | 3 | `illusion_direction` | character | `"a"`, `"b"`, `NA` | `response_larger` when `illusion_susceptible == TRUE` | On Tier 1 trials where fooled: which side did model pick? Tests directional bias. |
 | 4 | `model_label` | character | e.g., `"openai/gpt-5.4-pro"` | `paste0(provider, "/", model)` | Human-readable model name for plots. |
 
+### analyze_results() parameters
+
+| Parameter | Type | Default | Meaning |
+|-----------|------|---------|---------|
+| `tasks` | list | `NULL` | Named list of vitals Task objects from `run_evals()`. |
+| `trials_path` | character | `"data/trials.csv"` | Path to trials CSV. |
+| `evals_path` | character | `NULL` | Path to legacy evals CSV (only if `tasks` is NULL). |
+| `prompts_path` | character | `"data/prompts.csv"` | Path to prompts CSV. |
+| `show_plots` | logical | `TRUE` | If `TRUE`, plots are printed to the graphics device. If `FALSE`, saved as PNGs to `output_dir`. |
+| `output_dir` | character | `"output"` | Directory for saved plots (only used when `show_plots = FALSE`). |
+
+### Metric data frames assigned to global environment
+
+`analyze_results()` assigns these data frames to the global environment via `<<-`. They are also available in the returned `results$metrics` list.
+
+| Data frame | Description |
+|------------|-------------|
+| `accuracy_by_model` | Overall accuracy per model |
+| `accuracy_by_model_tier` | Accuracy per model × tier |
+| `accuracy_by_prompt` | Accuracy per prompt variant × model |
+| `accuracy_by_prompt_tier` | Accuracy per prompt × model × tier |
+| `illusion_susceptibility` | Tier 1 susceptibility rate per model |
+| `illusion_direction` | Tier 1 direction bias per model |
+| `spatial_bias` | A-vs-B response preference per model |
+| `spatial_bias_by_orientation` | A-vs-B preference by orientation per model |
+| `congruency_effect` | Tier 3 − Tier 2 accuracy delta per model |
+| `confusion` | Confusion matrix (true vs predicted counts) per model |
+| `dprime` | Signal-detection d′ per model |
+| `temperature_effect` | Accuracy by temperature (conditional; `NULL` if only one temperature) |
+| `format_effect` | Accuracy by file format (conditional; `NULL` if only one format) |
+| `confidence_calibration` | Calibration bins (conditional; `NULL` if no confidence data) |
+
 ### How to compute additional derived variables:
 
 ```r
-results <- analyze_results()
+results <- analyze_results(tasks = tasks)
 data <- results$data
 
 # Example: Do surrounds match test shape?
@@ -325,7 +357,7 @@ run_evals(trials, prompts, models)
 | **Change image resolution** | `CANVAS_SIZES` | `config/defaults.R` |
 | **Exclude Tier 0 trials** | Filter trials | `trials |> filter(tier > 0)` |
 | **Test temperature effects** | Add multiple model configs with different `temperature` | `run_evals()` |
-| **Compute custom metrics** | Add derived columns | In `analyze_results()` or post-hoc on `results$data` |
+| **Compute custom metrics** | Add derived columns | Post-hoc on `results$data` or the global metric data frames |
 
 ---
 
