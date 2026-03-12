@@ -8,6 +8,12 @@
 #   1. vitals Tasks (primary): pass a list of Task objects from run_evals()
 #   2. Legacy CSV (backward-compatible): pass paths to evals.csv
 #
+# Output behavior:
+#   - show_plots = TRUE  (default): plots are printed to the graphics device.
+#   - show_plots = FALSE: plots are saved as PNG to output_dir.
+#   - Metric data frames are assigned to the global environment for
+#     interactive inspection and optional export.
+#
 # Usage:
 #   source("R/analyze.R")  # also sources R/evaluate.R
 #
@@ -189,24 +195,29 @@ compute_dprime <- function(data) {
 
 #' Analyze evaluation results
 #'
-#' Computes accuracy and bias metrics and generates key plots. All outputs
-#' (plots as PNG, tables as CSV) are saved to `output_dir`.
+#' Computes accuracy and bias metrics and generates key plots.
 #'
 #' @param tasks       Named list of vitals Task objects (from run_evals()).
 #'   If NULL, falls back to reading from CSV files.
 #' @param trials_path  Path to trials.csv
 #' @param evals_path   Path to legacy evals.csv (only if tasks is NULL)
 #' @param prompts_path Path to prompts.csv
-#' @param output_dir   Directory for plots and summary tables
+#' @param output_dir   Directory for plots (only used when show_plots = FALSE)
+#' @param show_plots   If TRUE (default), print plots to the graphics device.
+#'   If FALSE, save plots as PNG to output_dir.
 #' @return List with: $data (joined data frame), $metrics (summary stats),
-#'   $plots (list of ggplot objects)
+#'   $plots (list of ggplot objects).
+#'   Metric data frames are also assigned to the global environment.
 analyze_results <- function(tasks        = NULL,
                             trials_path  = "data/trials.csv",
                             evals_path   = NULL,
                             prompts_path = "data/prompts.csv",
-                            output_dir   = "output") {
+                            output_dir   = "output",
+                            show_plots   = TRUE) {
 
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  if (!show_plots) {
+    if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  }
 
   data <- load_eval_data(
     tasks        = tasks,
@@ -590,43 +601,34 @@ analyze_results <- function(tasks        = NULL,
   }
 
   # =========================================================================
-  # Save outputs
+  # Output
   # =========================================================================
 
-  # Save all plots
-  for (pname in names(plots)) {
-    p <- plots[[pname]]
-    if (!is.null(p)) {
-      ggsave(
-        file.path(output_dir, paste0(pname, ".png")), p,
-        width = 8, height = 5
-      )
-    }
+  # Assign metric data frames to the global environment
+  for (mname in names(metrics)) {
+    assign(mname, metrics[[mname]], envir = .GlobalEnv)
   }
 
-  # Save summary tables
-  save_csv <- function(df, name) {
-    if (!is.null(df) && nrow(df) > 0) {
-      write.csv(df, file.path(output_dir, paste0(name, ".csv")), row.names = FALSE)
+  # Show or save plots
+  if (show_plots) {
+    for (pname in names(plots)) {
+      p <- plots[[pname]]
+      if (!is.null(p)) print(p)
     }
+    message("Analysis complete. Metric data frames assigned to global environment.")
+  } else {
+    for (pname in names(plots)) {
+      p <- plots[[pname]]
+      if (!is.null(p)) {
+        ggsave(
+          file.path(output_dir, paste0(pname, ".png")), p,
+          width = 8, height = 5
+        )
+      }
+    }
+    message("Analysis complete. Plots saved to: ", output_dir,
+            ". Metric data frames assigned to global environment.")
   }
-
-  save_csv(accuracy_by_model,           "accuracy_by_model")
-  save_csv(accuracy_by_model_tier,      "accuracy_by_model_tier")
-  save_csv(accuracy_by_prompt,          "accuracy_by_prompt")
-  save_csv(accuracy_by_prompt_tier,     "accuracy_by_prompt_tier")
-  save_csv(illusion_susceptibility_rate, "illusion_susceptibility")
-  save_csv(illusion_direction_rate,     "illusion_direction")
-  save_csv(spatial_bias,                "spatial_bias")
-  save_csv(spatial_bias_by_orientation, "spatial_bias_by_orientation")
-  save_csv(congruency_effect,           "congruency_effect")
-  save_csv(confusion,                   "confusion_matrix")
-  save_csv(dprime,                      "dprime")
-  save_csv(temperature_effect,          "temperature_effect")
-  save_csv(format_effect,               "format_effect")
-  save_csv(confidence_calibration,      "confidence_calibration")
-
-  message("Analysis complete. Plots and tables saved to: ", output_dir)
 
   list(
     data    = data,
