@@ -1,6 +1,6 @@
 # Ebbinghaus Benchmark - Python <img src="../docs/hex.png" alt="Ebbinghause hex logo" align="right" height="150"/>
 
-Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Uses `pandas`, `matplotlib`, and [Inspect AI](https://inspect.ai-safety-institute.org.uk/) for evaluation. Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
+Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Uses [Inspect AI](https://inspect.ai-safety-institute.org.uk/) for evaluation. Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
 
 [![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://www.python.org/)
