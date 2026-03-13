@@ -72,7 +72,7 @@ Edit [`py/config/defaults.py`](config/defaults.py) to customize shapes, sizes, o
 
 Uses Inspect AI's `Task`, `@solver`, and `@scorer` decorators. API keys are read from environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`).
 
-> **Lightweight alternative:** If you prefer not to depend on Inspect AI, you can use a legacy CSV-based workflow by adapting `R/legacy/evaluate.R` patterns for Python.
+> **No Inspect AI?** Use the Kaggle notebook workflow: load your evals into a DataFrame and run `analyze_results(show_plots=False, evals_df=evals, ...)`, then browse plots via the notebook display cells.
 
 ## Phase 3: Analysis
 
