@@ -1,6 +1,8 @@
-# Ebbinghaus Benchmark - Python <img src="../docs/hex.png" alt="Ebbinghause hex logo" align="right" height="150"/>
+# Ebbinghaus Benchmark - Python 🐍 <img src="https://raw.githubusercontent.com/iamYannC/Ebbinghaus/main/docs/hex.png" alt="Ebbinghause hex logo from url" align="right" height="150"/>
 
-Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Uses [Inspect AI](https://inspect.ai-safety-institute.org.uk/) for evaluation. Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
+Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
+
+🔥Try the [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python) with [Gemma 3 4B](https://huggingface.co/google/gemma-3-4b-it) on a free GPU.
 
 [![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://www.python.org/)
@@ -83,7 +85,7 @@ Uses Inspect AI's `Task`, `@solver`, and `@scorer` decorators. API keys are read
 # Default: display plots inline, metrics in returned dict
 results = analyze_results(logs=logs)
 
-# From an in-memory DataFrame (e.g., in a Kaggle notebook):
+# From an in-memory DataFrame:
 results = analyze_results(evals_df=evals)
 
 # Save plots as PNGs instead of displaying:
@@ -113,3 +115,9 @@ See the [root README](../README.md) for tier definitions and project overview.
 ## Reference Manual
 
 For the full internal-function reference, see [`docs/py_reference_manual.pdf`](../docs/py_reference_manual.pdf).
+
+## License & Citation
+
+This project is licensed under [CC BY 4.0](LICENSE.md) - you are free to use, modify, and redistribute with attribution. See [`CITATION.cff`](CITATION.cff) or use the "Cite this repository" button on GitHub.
+
+Visit my [website](https://iamyannc.github.io/Yann-dev) for contact information.

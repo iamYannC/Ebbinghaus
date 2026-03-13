@@ -1,6 +1,6 @@
-# Ebbinghaus Illusion Benchmark <img src="docs/hex.png" alt="Ebbinghause hex logo" align="right" height="150"/>
+# Ebbinghaus Illusion Benchmark <img src="https://raw.githubusercontent.com/iamYannC/Ebbinghaus/main/docs/hex.png" alt="Ebbinghause hex logo from url" align="right" height="150"/>
 
-A flexible R & Python (and [Kaggle's Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)) for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
+A flexible R & Python (and [Kaggle's Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)) for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table.
 
 
 [![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
@@ -10,8 +10,10 @@ A flexible R & Python (and [Kaggle's Notebook](https://www.kaggle.com/code/yannc
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-brightgreen?logo=orcid)](https://orcid.org/0009-0009-0509-3609)
 
-## Python Users
+## Python Users 🐍
 A complete [Python](https://github.com/iamYannC/Ebbinghaus/tree/main/py) version of the benchmark is also available.
+
+🔥 [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python) with [Gemma 3 4B](https://huggingface.co/google/gemma-3-4b-it) on a free GPU.
 
 ------------------------------------------------------------------------
 
@@ -38,7 +40,7 @@ source("R/analyze.R")
 results <- analyze_results(tasks = tasks)
 ```
 
-Phase 1 (stimulus creation) works standalone. Phase 2 requires API keys and the `vitals`/`ellmer` packages. Phase 3 is optional — a convenience layer for standard metrics and plots. See below for details on each phase.
+Phase 1 (stimulus creation) works standalone. Phase 2 requires API keys and the `vitals`/`ellmer` packages. Phase 3 is optional - a convenience layer for standard metrics and plots. See below for details on each phase.
 
 ------------------------------------------------------------------------
 
@@ -169,6 +171,6 @@ For the full internal-function reference, see [`docs/reference_manual.pdf`](docs
 
 ## License & Citation
 
-This project is licensed under [Creative Commons Attribution 4.0](LICENSE.md), covering both the source code and any output it produces (stimulus images, trial tables, analysis results). You are free to use, download, and modify the code as you please with proper citation. See [`CITATION.cff`](CITATION.cff) for citation metadata, or use the "Cite this repository" button on GitHub.
+This project is licensed under [CC BY 4.0](LICENSE.md) - you are free to use, modify, and redistribute with attribution. See [`CITATION.cff`](CITATION.cff) or use the "Cite this repository" button on GitHub.
 
 Visit my [website](https://iamyannc.github.io/Yann-dev) for contact information.
