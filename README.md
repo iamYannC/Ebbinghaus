@@ -1,6 +1,6 @@
 # Ebbinghaus Illusion Benchmark <img src="docs/hex.png" alt="Ebbinghause hex logo" align="right" height="150"/>
 
-A flexible ~~R toolkit~~ (Now also for [Python users!](py/README.md)) for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
+A flexible R & Python (and [Kaggle's Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)) for generating variants of the Ebbinghaus illusion and evaluating vision-language model (VLM) accuracy on them. The project provides a straightforward API for the common case while allowing full flexibility over every parameter. The **[trial table](data/trials.csv) is the single source of truth**: every stimulus image is fully determined by a row in this table, and researchers control the experiment entirely through it.
 
 
 [![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
@@ -9,6 +9,11 @@ A flexible ~~R toolkit~~ (Now also for [Python users!](py/README.md)) for genera
 [![Kaggle Notebook](https://img.shields.io/badge/Kaggle-Notebook-20BEFF?logo=kaggle)](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-brightgreen?logo=orcid)](https://orcid.org/0009-0009-0509-3609)
+
+## Python Users
+A complete [Python](https://github.com/iamYannC/Ebbinghaus/tree/main/py) version of the benchmark is also available.
+
+------------------------------------------------------------------------
 
 ## Quick Start
 
@@ -153,12 +158,6 @@ Ebbinghaus/
 ```
 
 `data/` serves as the interchange directory between phases: each phase writes its output there, and the next phase reads from it. For the complete project tree with all internal modules, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
-
----
-
-## Python Version
-
-A full Python port is available in the [`py/`](py/) directory, using `pandas`, `matplotlib`, and [Inspect AI](https://inspect.ai-safety-institute.org.uk/). Both versions write to the same shared directories (`images/`, `data/`, `output/`). See [`py/README.md`](py/README.md) for setup and usage.
 
 ---
 
