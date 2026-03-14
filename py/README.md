@@ -2,15 +2,15 @@
 
 Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
 
-🔥Try the [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)  comparing `Gemma 3 4B` and `Qwen2-VL 2B` (free OS models).
-
-
 [![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://www.python.org/)
 [![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-20BEFF?logo=kaggle)](https://www.kaggle.com/datasets/yanncohen/ebbinghaus-illusion-benchmark)
 [![Kaggle Notebook](https://img.shields.io/badge/Kaggle-Notebook-20BEFF?logo=kaggle)](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-brightgreen?logo=orcid)](https://orcid.org/0009-0009-0509-3609)
+
+🔥Try the [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)  comparing `Gemma 3 4B` and `Qwen2-VL 2B` (free OS models).
+
 
 ## Setup
 
