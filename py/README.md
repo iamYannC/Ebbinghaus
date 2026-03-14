@@ -2,7 +2,7 @@
 
 Python implementation of the [Ebbinghaus Illusion Benchmark](../README.md). Output writes to the same shared directories (`images/`, `data/`, `output/`) as the R version.
 
-🔥Try the [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python) with [Gemma 3 4B](https://huggingface.co/google/gemma-3-4b-it) on a free GPU.
+🔥Try the [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)  comparing [Gemma 3 4B](https://huggingface.co/google/gemma-3-4b-it) and [Qwen2-VL 2B](https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct) via [Hugging Face](https://huggingface.co/) (free OS models).
 
 [![DOI](https://raw.githubusercontent.com/iamYannC/Ebbinghaus/master/docs/doi.svg)](https://doi.org/10.5281/zenodo.18906801)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://www.python.org/)

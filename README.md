@@ -13,7 +13,7 @@ A flexible R & Python (and [Kaggle's Notebook](https://www.kaggle.com/code/yannc
 ## Python Users 🐍
 A complete [Python](https://github.com/iamYannC/Ebbinghaus/tree/main/py) version of the benchmark is also available.
 
-🔥 [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python) with [Gemma 3 4B](https://huggingface.co/google/gemma-3-4b-it) on a free GPU.
+🔥 [Kaggle Notebook](https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python)  comparing [Gemma 3 4B](https://huggingface.co/google/gemma-3-4b-it) and [Qwen2-VL 2B](https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct) via [Hugging Face](https://huggingface.co/) (free OS models).
 
 ------------------------------------------------------------------------
 
