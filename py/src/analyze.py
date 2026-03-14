@@ -623,6 +623,11 @@ def analyze_results(
     # Output
     # =========================================================================
 
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        for pname, fig in plots.items():
+            fig.savefig(os.path.join(output_dir, f"{pname}.png"), bbox_inches="tight")
+
     if show_plots:
         for pname, fig in plots.items():
             fig.show()
