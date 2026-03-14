@@ -105,8 +105,8 @@ logs = run_evals(trials, prompts, models)
 | `trials_path` | str | `"data/trials.csv"` | Path to trials CSV |
 | `evals_path` | str | `None` | Path to legacy evals CSV |
 | `prompts_path` | str | `"data/prompts.csv"` | Path to prompts CSV |
-| `show_plots` | bool | `True` | If `True`, display plots via `plt.show()`. If `False`, save as PNGs to `output_dir`. |
-| `output_dir` | str | `"output"` | Directory for saved plots (only used when `show_plots=False`) |
+| `show_plots` | bool | `True` | If `True`, display plots via `plt.show()` in addition to saving. If `False`, plots are saved and returned but not displayed. |
+| `output_dir` | str | `"output"` | Directory for saved plot PNGs. Set to `None` to skip saving to disk. |
 
 Provide exactly one of `logs`, `evals_df`, or `evals_path`.
 

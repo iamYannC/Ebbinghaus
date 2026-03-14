@@ -10,9 +10,11 @@ Supports three input modes:
   3. Legacy CSV (backward-compatible): pass path to evals.csv
 
 Output behavior:
-  - show_plots=True  (default): plots are displayed via plt.show().
-  - show_plots=False: plots are built but not displayed. Access them
-    via results["plots"] (e.g., for IPython.display in notebooks).
+  - Plots are always saved as PNGs to output_dir (default "output/").
+    Set output_dir=None to skip saving.
+  - show_plots=True  (default): plots are also displayed via plt.show().
+  - show_plots=False: plots are saved and returned but not displayed.
+    Access them via results["plots"] (e.g., for IPython.display).
   - Metric DataFrames are returned in results["metrics"] dict.
 
 Usage:
@@ -218,10 +220,11 @@ def analyze_results(
         trials_path: Path to trials.csv.
         evals_path: Path to legacy evals.csv (only if logs and evals_df are None).
         prompts_path: Path to prompts.csv.
-        output_dir: Reserved for future use.
-        show_plots: If True (default), display plots via plt.show().
-            If False, plots are built but not displayed — access them
-            via results["plots"] (e.g., for IPython.display).
+        output_dir: Directory for saved plot PNGs (default "output").
+            Set to None to skip saving to disk.
+        show_plots: If True (default), display plots via plt.show()
+            in addition to saving. If False, plots are saved and
+            returned in results["plots"] but not displayed.
 
     Returns:
         Dict with: data, metrics, plots.

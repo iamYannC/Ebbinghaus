@@ -82,17 +82,20 @@ Uses Inspect AI's `Task`, `@solver`, and `@scorer` decorators. API keys are read
 | **Output** | Plots (displayed or saved to `output/`) + metric DataFrames in the returned dict |
 
 ```python
-# Default: display plots inline, metrics in returned dict
+# Default: display plots inline and save PNGs to output/
 results = analyze_results(logs=logs)
 
 # From an in-memory DataFrame:
 results = analyze_results(evals_df=evals)
 
-# Save plots as PNGs instead of displaying:
+# Suppress inline display (plots are still saved and available in results["plots"]):
 results = analyze_results(logs=logs, show_plots=False)
+
+# Skip saving to disk entirely:
+results = analyze_results(logs=logs, output_dir=None)
 ```
 
-By default, plots are displayed inline via `plt.show()`. Set `show_plots=False` to save them as PNGs to `output/`. Metric DataFrames (e.g., `results["metrics"]["accuracy_by_model"]`) are always returned in the result dict for inspection or export. Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more.
+Plots are always saved as PNGs to `output_dir` (default `"output/"`) and available in `results["plots"]`. Set `show_plots=False` to suppress inline display, or `output_dir=None` to skip saving to disk. Metric DataFrames (e.g., `results["metrics"]["accuracy_by_model"]`) are always returned in the result dict for inspection or export. Computed metrics include overall accuracy, accuracy by tier, psychometric curves, illusion susceptibility, spatial bias, congruency effects, d-prime, and more.
 
 ## File Structure
 
@@ -106,7 +109,7 @@ py/
 │   └── analyze.py                  # Phase 3 — Metrics and plots
 ```
 
-`data/`, `images/`, and `output/` are shared with R at the project root. `output/` is only written when `show_plots=False`. For the full module listing, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
+`data/`, `images/`, and `output/` are shared with R at the project root. `output/` is written by default (pass `output_dir=None` to skip). For the full module listing, see [`TECHNICAL_REFERENCE.md`](TECHNICAL_REFERENCE.md).
 
 See the [root README](../README.md) for tier definitions and project overview.
 
