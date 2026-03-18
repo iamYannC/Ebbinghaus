@@ -49,9 +49,9 @@ Not into writing code? Generating your custom Ebbinghaus stimuli is as easy as i
 [Click here to try it!](https://tinyurl.com/ebbinghaus-bench)
 
 <p align="center">
-  <img src="docs/app-config.jpg" width="32%" alt="Configuration tab with parameter cards" />
-  <img src="docs/app-trials.jpg" width="32%" alt="Trials tab showing design matrix and stimulus preview" />
-  <img src="docs/app-stimuli.jpg" width="32%" alt="Stimuli tab showing rendered image grid" />
+  <img src="https://raw.githubusercontent.com/iamYannC/Ebbinghaus/main/docs/app-config.jpg" width="32%" alt="Configuration tab with parameter cards" />
+  <img src="https://raw.githubusercontent.com/iamYannC/Ebbinghaus/main/docs/app-trials.jpg" width="32%" alt="Trials tab showing design matrix and stimulus preview" />
+  <img src="https://raw.githubusercontent.com/iamYannC/Ebbinghaus/main/docs/app-stimuli.jpg" width="32%" alt="Stimuli tab showing rendered image grid" />
 </p>
 
 
