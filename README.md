@@ -44,6 +44,24 @@ Phase 1 (stimulus creation) works standalone. Phase 2 requires API keys and the 
 
 ------------------------------------------------------------------------
 
+## Shiny App
+
+A [Shiny app](R/App/) provides a point-and-click interface for Phase 1. Generate trial designs, render stimuli with live progress, preview images, and download results as CSV or ZIP - no code required.
+
+```r
+shiny::runApp("R/App")
+```
+
+<p align="center">
+  <img src="docs/app-trials.jpg" width="32%" alt="Trials tab showing design matrix and stimulus preview" />
+  <img src="docs/app-stimuli.jpg" width="32%" alt="Stimuli tab showing rendered image grid" />
+  <img src="docs/app-config.jpg" width="32%" alt="Configuration tab with parameter cards" />
+</p>
+
+All generation parameters are exposed in the **Configuration** tab for researchers who need fine-grained control.
+
+------------------------------------------------------------------------
+
 ## Difficulty Tiers
 
 Each trial is assigned a difficulty tier based on the relationship between test sizes and surrounding context shapes. The core illusion principle: **larger surrounds make the enclosed test shape appear smaller**.
@@ -145,6 +163,7 @@ By default, plots are printed to the graphics device for interactive viewing. Se
 Ebbinghaus/
 ├── config/defaults.R               # Configurable parameters (shapes, sizes, colors, etc.)
 ├── R/
+│   ├── App/                        # Shiny app for Phase 1 (self-contained)
 │   ├── generate_design.R           # Phase 1 — Build a complete design matrix
 │   ├── render_stimuli.R            # Phase 1 — Batch render trial table to images
 │   ├── evaluate.R                  # Phase 2 — vitals-based evaluation pipeline
