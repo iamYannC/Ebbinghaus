@@ -44,23 +44,19 @@ Phase 1 (stimulus creation) works standalone. Phase 2 requires API keys and the 
 
 ------------------------------------------------------------------------
 
-## Shiny App
-
-A [Shiny app](R/App/) provides a point-and-click interface for Phase 1. Generate trial designs, render stimuli with live progress, preview images, and download results as CSV or ZIP - no code required.
-
-```r
-shiny::runApp("R/App")
-```
+## [Shiny App](https://tinyurl.com/ebbinghaus-bench)
+Not into writing code? Generating your custom Ebbinghaus stimuli is as easy as it gets, with this shiny app that provides a simple yet flexible interface for phase 1 (trials and stimuli generation). You can generate, view and download the stimuli, and have full control over the configuration just as if you were to code it yourself!
+[Click here to try it!](https://tinyurl.com/ebbinghaus-bench)
 
 <p align="center">
+  <img src="docs/app-config.jpg" width="32%" alt="Configuration tab with parameter cards" />
   <img src="docs/app-trials.jpg" width="32%" alt="Trials tab showing design matrix and stimulus preview" />
   <img src="docs/app-stimuli.jpg" width="32%" alt="Stimuli tab showing rendered image grid" />
-  <img src="docs/app-config.jpg" width="32%" alt="Configuration tab with parameter cards" />
 </p>
 
-All generation parameters are exposed in the **Configuration** tab for researchers who need fine-grained control.
 
 ------------------------------------------------------------------------
+
 
 ## Difficulty Tiers
 
