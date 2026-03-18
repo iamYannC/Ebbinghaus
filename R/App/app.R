@@ -77,10 +77,9 @@ ui <- page_navbar(
   nav_panel(
     "Welcome",
     div(
-      class = "d-flex justify-content-center align-items-center",
-      style = "min-height: 80vh;",
+      style = "padding: 3rem;",
       div(
-        style = "max-width: 640px; text-align: center;",
+        style = "max-width: 640px; font-size: 1.5rem;",
         tags$img(src = "hex.png", height = "160", class = "mb-4"),
         tags$p(
           "The Ebbinghaus Benchmark is an open-source project I\u2019ve put",
