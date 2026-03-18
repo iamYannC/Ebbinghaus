@@ -26,10 +26,10 @@ source("src/render_stimuli.R")
 # --- Constants ---------------------------------------------------------------
 
 TIER_CHOICES <- c(
-  "Tier 0 \u2014 Sanity (no surrounds)"       = "0",
-  "Tier 1 \u2014 Classic illusion"             = "1",
-  "Tier 2 \u2014 Incongruent (opposes truth)"  = "2",
-  "Tier 3 \u2014 Congruent (reinforces truth)" = "3"
+  "Tier 0 - Sanity (no surrounds)"       = "0",
+  "Tier 1 - Classic illusion"             = "1",
+  "Tier 2 - Incongruent (opposes truth)"  = "2",
+  "Tier 3 - Congruent (reinforces truth)" = "3"
 )
 
 # =============================================================================
@@ -65,7 +65,7 @@ ui <- page_navbar(
       div(
         style = "max-width: 640px; font-size: 1.5rem;",
         tags$p(
-          "The Ebbinghaus Benchmark is an open-source project I\u2019ve put",
+          "The Ebbinghaus Benchmark is an open-source project I've put",
           " together to allow researchers a simple yet flexible API to generate",
           " variants of the Ebbinghaus Illusion. The full project is on ",
           tags$a("GitHub", href = "https://github.com/iamYannC/Ebbinghaus",
@@ -385,7 +385,7 @@ server <- function(input, output, session) {
   output$total_trials <- renderText({
     n_tiers <- length(input$tiers)
     n_per <- input$n_per_tier %||% 0
-    paste0(n_tiers, " tiers \u00d7 ", n_per, " = ", n_tiers * n_per)
+    paste0(n_tiers, " tiers x ", n_per, " = ", n_tiers * n_per)
   })
 
   # --- Generate design -------------------------------------------------------
@@ -415,7 +415,7 @@ server <- function(input, output, session) {
 
     file_format <- input$cfg_default_format
 
-    withProgress(message = "Generating design\u2026", value = 0, {
+    withProgress(message = "Generating design...", value = 0, {
       if (is.null(seed)) seed <- round(runif(1, -1e9, 1e9))
       set.seed(seed)
 
@@ -525,7 +525,7 @@ server <- function(input, output, session) {
     trials <- rv$trials
     n <- nrow(trials)
 
-    withProgress(message = "Rendering stimuli\u2026", value = 0, {
+    withProgress(message = "Rendering stimuli...", value = 0, {
       dirs <- unique(dirname(trials$file_path))
       for (d in dirs) {
         if (!dir.exists(d)) dir.create(d, recursive = TRUE)
