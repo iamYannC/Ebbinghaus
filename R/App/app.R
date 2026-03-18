@@ -80,7 +80,6 @@ ui <- page_navbar(
       style = "padding: 3rem;",
       div(
         style = "max-width: 640px; font-size: 1.5rem;",
-        tags$img(src = "hex.png", height = "160", class = "mb-4"),
         tags$p(
           "The Ebbinghaus Benchmark is an open-source project I\u2019ve put",
           " together to allow researchers a simple yet flexible API to generate",
@@ -189,7 +188,7 @@ ui <- page_navbar(
     layout_column_wrap(
       width = "380px",
       fill = FALSE,
-      heights_equal = "row",
+      style = "align-items: start;",
 
       # Shapes
       card(
@@ -281,20 +280,8 @@ ui <- page_navbar(
             choices = c("512" = "512", "768" = "768", "1024" = "1024"),
             selected = as.character(CANVAS_SIZES)
           ),
-          layout_columns(
-            col_widths = c(6, 6),
-            numericInput("cfg_canvas_width", "Default width",
-                         DEFAULT_CANVAS_WIDTH, min = 128, max = 2048, step = 64),
-            numericInput("cfg_canvas_height", "Default height",
-                         DEFAULT_CANVAS_HEIGHT, min = 128, max = 2048, step = 64)
-          ),
-          checkboxGroupInput(
-            "cfg_format_pool", "File format pool",
-            choices = c("png", "svg", "webp"),
-            selected = FILE_FORMAT_POOL
-          ),
           selectInput(
-            "cfg_default_format", "Default file format",
+            "cfg_default_format", "Select file format",
             choices = FILE_FORMAT_POOL,
             selected = DEFAULT_FILE_FORMAT
           )
@@ -306,9 +293,7 @@ ui <- page_navbar(
         card_header("Advanced"),
         card_body(
           numericInput("cfg_float_tolerance", "Float tolerance",
-                       FLOAT_TOLERANCE, min = 1e-15, max = 1e-3),
-          numericInput("cfg_n_per_tier", "Default trials per tier",
-                       DEFAULT_N_PER_TIER, min = 1, max = 1000, step = 1)
+                       FLOAT_TOLERANCE, min = 1e-15, max = 1e-3)
         )
       )
     ),
@@ -327,7 +312,7 @@ ui <- page_navbar(
     tags$a(
       href = "https://github.com/iamYannC/Ebbinghaus",
       target = "_blank",
-      title = "Benchmark Reoo on GitHub",
+      title = "Benchmark Repo on GitHub",
       class = "nav-link px-2",
       tags$svg(
         xmlns = "http://www.w3.org/2000/svg",
@@ -699,10 +684,6 @@ server <- function(input, output, session) {
                              selected = c("#FFFFFF", "#000000"))
     updateCheckboxGroupInput(session, "cfg_canvas_sizes",
                              selected = c("512", "768", "1024"))
-    updateNumericInput(session, "cfg_canvas_width",  value = 768)
-    updateNumericInput(session, "cfg_canvas_height", value = 768)
-    updateCheckboxGroupInput(session, "cfg_format_pool",
-                             selected = c("png", "svg", "webp"))
     updateSelectInput(session, "cfg_default_format", selected = "png")
     updateNumericInput(session, "cfg_float_tolerance", value = 1e-9)
     updateNumericInput(session, "cfg_n_per_tier",     value = 50)
