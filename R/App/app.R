@@ -54,9 +54,11 @@ TIER_CHOICES <- c(
 
 ui <- page_navbar(
   title = tags$a(
-    href = "#",
-    class = "d-flex align-items-center text-decoration-none",
-    tags$img(src = "hex.png", height = "36", class = "me-2"),
+    href = "https://zenodo.org/records/18915222",
+    target = "_blank",
+    title = "Click for the Project's official DOI",
+    class = "d-flex align-items-center text-decoration-none me-4",
+    tags$img(src = "hex.png", height = "100", class = "me-2"),
     tags$span("Ebbinghaus Benchmark", class = "fw-semibold")
   ),
   theme = bs_theme(version = 5),
@@ -267,7 +269,7 @@ ui <- page_navbar(
     tags$a(
       href = "https://github.com/iamYannC/Ebbinghaus",
       target = "_blank",
-      title = "GitHub repository",
+      title = "Benchmark Reoo on GitHub",
       class = "nav-link px-2",
       tags$svg(
         xmlns = "http://www.w3.org/2000/svg",
