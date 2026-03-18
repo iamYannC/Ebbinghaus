@@ -61,7 +61,10 @@ ui <- page_navbar(
     tags$img(src = "hex.png", height = "100", class = "me-2"),
     tags$span("Ebbinghaus Benchmark", class = "fw-semibold")
   ),
-  theme = bs_theme(version = 5),
+  theme = bs_theme(
+    version = 5,
+    "navbar-padding-y" = "0"
+  ),
   fillable = TRUE,
 
   # --- Tab 1: Trials ---------------------------------------------------------
