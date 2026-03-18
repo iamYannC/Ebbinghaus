@@ -8,6 +8,7 @@
 library(shiny)
 library(bslib)
 library(reactable)
+library(dplyr)
 library(ggplot2)
 library(ggforce)
 
