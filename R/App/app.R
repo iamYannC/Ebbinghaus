@@ -11,33 +11,16 @@ library(reactable)
 library(ggplot2)
 library(ggforce)
 
-# --- Locate project root (works from R/App/ or project root) ----------------
+# --- Source bundled project files (order matters) ----------------------------
 
-find_root <- function() {
-  candidates <- c(
-    getwd(),
-    normalizePath(file.path(getwd(), "../.."), winslash = "/", mustWork = FALSE),
-    normalizePath(file.path(getwd(), ".."), winslash = "/", mustWork = FALSE)
-  )
-  for (dir in candidates) {
-    if (file.exists(file.path(dir, "config", "defaults.R"))) return(dir)
-  }
-  stop("Cannot find Ebbinghaus project root (config/defaults.R not found).\n",
-       "Launch this app from the project root: shiny::runApp('R/App')")
-}
-
-setwd(find_root())
-
-# --- Source project files ----------------------------------------------------
-
-source("config/defaults.R")
-source("R/verify_trial.R")
-source("R/classify_tier.R")
-source("R/generate_trial.R")
-source("R/generate_design.R")
-source("R/draw_shape.R")
-source("R/draw_trial.R")
-source("R/render_stimuli.R")
+source("src/defaults.R")
+source("src/verify_trial.R")
+source("src/classify_tier.R")
+source("src/generate_trial.R")
+source("src/generate_design.R")
+source("src/draw_shape.R")
+source("src/draw_trial.R")
+source("src/render_stimuli.R")
 
 # --- Constants ---------------------------------------------------------------
 

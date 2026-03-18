@@ -1,0 +1,40 @@
+# =============================================================================
+# verify_trial.R — Deterministic ground-truth verifier
+# =============================================================================
+# Pure function. No side effects. Does not read images.
+# Takes trial parameters, returns ground truth columns.
+# =============================================================================
+
+# source("config/defaults.R")  # handled by app.R
+
+#' Compute ground truth for trial(s)
+#'
+#' @param trials A data frame with at least `test_a_size` and `test_b_size`.
+#' @param tol Floating-point tolerance for equality. Default from config.
+#'
+#' @return The input data frame with `true_larger` and `true_diff_ratio`
+#'   columns added (or overwritten).
+verify_trial <- function(trials, tol = FLOAT_TOLERANCE) {
+
+  stopifnot(
+    is.data.frame(trials),
+    "test_a_size" %in% names(trials),
+    "test_b_size" %in% names(trials)
+  )
+
+  diff <- trials$test_a_size - trials$test_b_size
+
+  trials$true_larger <- dplyr::case_when(
+    abs(diff) <= tol ~ "equal",
+    diff > 0         ~ "a",
+    diff < 0         ~ "b"
+  )
+
+  max_size <- pmax(trials$test_a_size, trials$test_b_size)
+  trials$true_diff_ratio <- abs(diff) / max_size
+
+  # Equal trials should have exactly 0 diff_ratio (not floating-point noise)
+  trials$true_diff_ratio[trials$true_larger == "equal"] <- 0
+
+  trials
+}
