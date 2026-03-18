@@ -63,9 +63,65 @@ ui <- page_navbar(
   ),
   theme = bs_theme(
     version = 5,
-    "navbar-padding-y" = "0"
+    "navbar-padding-y" = "0",
+    bg = "#e5e5e5", fg = "#356665", primary = "#c08c66",
+    base_font = font_google("Ubuntu"),
+    code_font = font_google("Iosevka Charon Mono"),
+    "font-size-base" = "0.75rem", "enable-rounded" = FALSE
   ),
+  
   fillable = TRUE,
+
+  # --- Tab 0: Welcome ---------------------------------------------------------
+
+  nav_panel(
+    "Welcome",
+    div(
+      class = "d-flex justify-content-center align-items-center",
+      style = "min-height: 80vh;",
+      div(
+        style = "max-width: 640px; text-align: center;",
+        tags$img(src = "hex.png", height = "160", class = "mb-4"),
+        tags$p(
+          "The Ebbinghaus Benchmark is an open-source project I\u2019ve put",
+          " together to allow researchers a simple yet flexible API to generate",
+          " variants of the Ebbinghaus Illusion. The full project is on ",
+          tags$a("GitHub", href = "https://github.com/iamYannC/Ebbinghaus",
+                 target = "_blank"),
+          " and ",
+          tags$a("Kaggle", href = "https://www.kaggle.com/datasets/yanncohen/ebbinghaus-illusion-benchmark",
+                 target = "_blank"),
+          ", and is comprised of two additional phases: Evaluation and Analysis.",
+          " It is suitable both as an AI benchmark and for human participants."
+        ),
+        tags$p(
+          "You can also find a Python implementation and a ",
+          tags$a("notebook example",
+                 href = "https://www.kaggle.com/code/yanncohen/ebbinghaus-illusion-benchmark-python",
+                 target = "_blank"),
+          " with open-source, free models."
+        ),
+        tags$p(
+          "In this application I provide you with a UI to generate the",
+          " underlying table as well as the stimuli. Please read more about",
+          " the different options in my repository and contact me if you have",
+          " further questions."
+        ),
+        tags$hr(class = "my-4", style = "max-width: 200px; margin-inline: auto;"),
+        tags$p(
+          class = "mb-1",
+          "I hope you find it useful."
+        ),
+        tags$p(
+          tags$strong("Yann."),
+          tags$br(),
+          tags$a("yann-dev.io",
+                 href = "https://iamyannc.github.io/Yann-dev",
+                 target = "_blank")
+        )
+      )
+    )
+  ),
 
   # --- Tab 1: Trials ---------------------------------------------------------
 
