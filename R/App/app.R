@@ -185,13 +185,12 @@ ui <- page_navbar(
 
   nav_panel(
     "Configuration",
-    layout_column_wrap(
-      width = "380px",
-      fill = FALSE,
-      style = "align-items: start;",
+    tags$div(
+      style = "column-count: 3; column-gap: 1rem; padding: 0.5rem;",
 
       # Shapes
       card(
+        style = "break-inside: avoid; margin-bottom: 1rem;",
         card_header("Shapes"),
         card_body(
           checkboxGroupInput(
@@ -209,6 +208,7 @@ ui <- page_navbar(
 
       # Sizes & Distances
       card(
+        style = "break-inside: avoid; margin-bottom: 1rem;",
         card_header("Sizes & Distances"),
         card_body(
           tags$label("Test size range"),
@@ -248,6 +248,7 @@ ui <- page_navbar(
 
       # Colors
       card(
+        style = "break-inside: avoid; margin-bottom: 1rem;",
         card_header("Colors"),
         card_body(
           textAreaInput(
@@ -273,6 +274,7 @@ ui <- page_navbar(
 
       # Canvas & Output
       card(
+        style = "break-inside: avoid; margin-bottom: 1rem;",
         card_header("Canvas & Output"),
         card_body(
           checkboxGroupInput(
@@ -290,6 +292,7 @@ ui <- page_navbar(
 
       # Advanced
       card(
+        style = "break-inside: avoid; margin-bottom: 1rem;",
         card_header("Advanced"),
         card_body(
           numericInput("cfg_float_tolerance", "Float tolerance",
